@@ -1,9 +1,7 @@
-import { Text, View } from "react-native";
+import Timer from "@/components/timer";
 
 export default function Index() {
-  return (
-    <View>
-      <Text className="text-3xl">Timer Screen</Text>
-    </View>
-  );
+  const time = new Date();
+  time.setSeconds(time.getSeconds() + 10);
+  return <Timer expiryTimestamp={time} />;
 }
