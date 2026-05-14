@@ -2,7 +2,7 @@
 
 _Dernière mise à jour : 2026-05-14_
 
-## Statut global : 🟡 En cours (phase 2 — fonctionnalités boxing)
+## Statut global : 🟡 En cours (phase 3 — UX / Design)
 
 ---
 
@@ -21,18 +21,18 @@ _Dernière mise à jour : 2026-05-14_
 
 ---
 
-## Phase 2 — Fonctionnalités boxing
+## Phase 2 — Fonctionnalités boxing ✅ Terminée
 
 | Tâche | Statut | Notes |
 |---|---|---|
-| Configuration : nombre de rounds | ❌ À faire | Défaut : 3 rounds |
-| Configuration : durée d'un round | ❌ À faire | Défaut : 3 min |
-| Configuration : durée du repos | ❌ À faire | Défaut : 1 min |
-| Enchaînement automatique Round → Repos → Round | ❌ À faire | |
-| Affichage du round actuel (ex: Round 2/5) | ❌ À faire | |
-| Alerte 10 secondes avant fin de phase | ❌ À faire | |
-| Vibrations avec expo-haptics | ❌ À faire | Package installé |
-| Son de cloche / buzzer | ❌ À faire | Besoin d'expo-av ou expo-audio |
+| Configuration : nombre de rounds | ✅ Fait | Défaut 3, min 1, max 12 |
+| Configuration : durée d'un round | ✅ Fait | Défaut 3 min, pas de 1 min, max 10 min |
+| Configuration : durée du repos | ✅ Fait | Défaut 1 min, pas de 30s, max 3 min |
+| Enchaînement automatique Round → Repos → Round | ✅ Fait | Machine à états idle/round/rest/done |
+| Affichage du round actuel (ex: Round 2/5) | ✅ Fait | + label "Repos · Round X →" pendant le repos |
+| Alerte 10 secondes avant fin de phase | ✅ Fait | Haptic ImpactFeedbackStyle.Heavy à 10s |
+| Vibrations avec expo-haptics | ✅ Fait | Notification à chaque fin de phase |
+| Son de cloche / buzzer | ⏭️ Reporté | Phase 3 — besoin d'expo-av |
 
 ---
 
