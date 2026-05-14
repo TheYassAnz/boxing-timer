@@ -180,14 +180,15 @@ export default function Timer() {
       if (p === "round") {
         if (round < cfg.rounds) {
           setPhase("rest");
-          restart(makeExpiry(cfg.restDuration), true);
+          // setTimeout defers restart until after react-timer-hook sets isRunning=false internally
+          setTimeout(() => restart(makeExpiry(cfg.restDuration), true), 0);
         } else {
           setPhase("done");
         }
       } else if (p === "rest") {
         setCurrentRound((r) => r + 1);
         setPhase("round");
-        restart(makeExpiry(cfg.roundDuration), true);
+        setTimeout(() => restart(makeExpiry(cfg.roundDuration), true), 0);
       }
     },
   });
