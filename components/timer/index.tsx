@@ -32,8 +32,6 @@ export default function Timer({ expiryTimestamp }: { expiryTimestamp: Date }) {
 
   useEffect(() => {
     if (isTimerExpired) {
-      // You can add additional side effects here when the timer expires
-
       alert("Timer expired!");
     }
   }, [isTimerExpired]);
@@ -41,7 +39,7 @@ export default function Timer({ expiryTimestamp }: { expiryTimestamp: Date }) {
   return (
     <View className="flex-1 items-center justify-center bg-white">
       <Text className="text-5xl">
-        {minutes}:{seconds}
+        {minutes}:{seconds}:{Math.floor(milliseconds / 100)}
       </Text>
       <Text className="font-light">
         {isTimerExpired ? "Timer expired" : isRunning ? "Running" : "Paused"}
