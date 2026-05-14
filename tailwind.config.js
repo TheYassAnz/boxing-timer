@@ -173,6 +173,14 @@ module.exports = {
           info: 'rgb(var(--color-indicator-info)/<alpha-value>)',
           error: 'rgb(var(--color-indicator-error)/<alpha-value>)',
         },
+        boxing: {
+          white: '#e7ecef',
+          navy: '#274c77',
+          blue: '#6096ba',
+          sky: '#a3cef1',
+          alert: '#ef233c',
+          dark: '#0d1b2a',
+        },
       },
       fontFamily: {
         heading: undefined,

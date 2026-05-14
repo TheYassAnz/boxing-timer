@@ -2,22 +2,22 @@
 
 _Dernière mise à jour : 2026-05-14_
 
-## Statut global : 🟡 En cours (phase 1 — base fonctionnelle)
+## Statut global : 🟡 En cours (phase 2 — fonctionnalités boxing)
 
 ---
 
-## Phase 1 — Timer de base fonctionnel
+## Phase 1 — Timer de base fonctionnel ✅ Terminée
 
 | Tâche | Statut | Notes |
 |---|---|---|
 | Structure du projet (Expo Router, tabs) | ✅ Fait | |
-| Composant Timer avec start/pause/reset | ✅ Fait | 10s hardcodé, à corriger |
+| Composant Timer avec start/pause/reset | ✅ Fait | |
 | Intégration NativeWind + Gluestack | ✅ Fait | |
-| Dark mode configuré | ✅ Fait | Incohérence bg-white dans Timer |
-| Timer hardcodé → durée configurable | ❌ À faire | |
-| Remplacer `alert()` par feedback visuel | ❌ À faire | |
-| Corriger bouton Start (resume → start) | ❌ À faire | |
-| Cohérence dark mode dans Timer | ❌ À faire | |
+| Dark mode configuré | ✅ Fait | |
+| Timer hardcodé → durée configurable | ✅ Fait | Prop `durationSeconds`, défaut 3 min |
+| Remplacer `alert()` par feedback visuel | ✅ Fait | Banner "Terminé !" + expo-haptics |
+| Corriger bouton Start (resume → start) | ✅ Fait | Toggle unifié Start/Pause/Reprendre |
+| Cohérence dark mode dans Timer | ✅ Fait | bg-background-950, text-typography-0 |
 
 ---
 
@@ -61,9 +61,4 @@ _Dernière mise à jour : 2026-05-14_
 
 ## Bugs connus
 
-| Bug | Priorité | Description |
-|---|---|---|
-| Timer hardcodé à 10s | Haute | `app/(tabs)/index.tsx:5` et `components/timer/index.tsx:29` |
-| `alert()` en fin de timer | Haute | UX bloquante, remplacer par feedback visuel + haptique |
-| Bouton Start appelle `resume()` | Moyenne | Devrait appeler `start()` au premier lancement |
-| bg-white dans Timer en dark mode | Basse | Incohérent avec `GluestackUIProvider mode="dark"` |
+Aucun bug connu en Phase 1.

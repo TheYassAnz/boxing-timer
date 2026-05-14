@@ -6,7 +6,7 @@ import '@/global.css';
 export default function RootLayout() {
   return (
     
-    <GluestackUIProvider mode="dark">
+    <GluestackUIProvider mode="system">
       <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
