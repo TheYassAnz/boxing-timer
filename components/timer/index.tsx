@@ -1,6 +1,8 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useEffect, useRef, useState } from "react";
-import { Text, View } from "react-native";
+import { Modal, Pressable, Text, TextInput, View } from "react-native";
 import { useTimer } from "react-timer-hook";
 import { Button, ButtonText } from "../ui/button";
 
@@ -13,6 +15,7 @@ interface Config {
 }
 
 const DEFAULTS: Config = { rounds: 3, roundDuration: 180, restDuration: 60 };
+const STORAGE_KEY = "boxing-timer-config";
 
 function makeExpiry(seconds: number): Date {
   const t = new Date();
@@ -30,54 +33,122 @@ function fmtDuration(s: number): string {
   return rem === 0 ? `${m} min` : `${m}:${pad(rem)}`;
 }
 
-interface ConfigRowProps {
+interface EditModalProps {
+  visible: boolean;
   label: string;
-  value: string;
-  onDecrement: () => void;
-  onIncrement: () => void;
+  value: number;
+  hint: string;
+  min: number;
+  max: number;
+  onSave: (v: number) => void;
+  onClose: () => void;
 }
 
-function ConfigRow({ label, value, onDecrement, onIncrement }: ConfigRowProps) {
+function EditModal({ visible, label, value, hint, min, max, onSave, onClose }: EditModalProps) {
+  const [text, setText] = useState(String(value));
+
+  useEffect(() => {
+    if (visible) setText(String(value));
+  }, [visible, value]);
+
+  const handleSave = () => {
+    const n = parseInt(text, 10);
+    if (!isNaN(n)) onSave(Math.min(max, Math.max(min, n)));
+    onClose();
+  };
+
   return (
-    <View className="flex-row items-center justify-between w-full px-8 py-2">
-      <Text className="text-boxing-navy dark:text-boxing-sky text-xs font-semibold uppercase tracking-widest w-20">
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable
+        className="flex-1 items-center justify-center bg-black/60"
+        onPress={onClose}
+      >
+        <Pressable onPress={() => {}}>
+          <View className="bg-boxing-white dark:bg-boxing-dark rounded-2xl px-6 py-6 w-72">
+            <Text className="text-boxing-navy dark:text-boxing-white text-xs font-semibold uppercase tracking-widest mb-4">
+              {label}
+            </Text>
+            <TextInput
+              className="bg-boxing-navy/10 dark:bg-boxing-white/10 text-boxing-navy dark:text-boxing-white font-bold text-3xl rounded-xl px-4 py-3 text-center"
+              value={text}
+              onChangeText={setText}
+              keyboardType="number-pad"
+              returnKeyType="done"
+              onSubmitEditing={handleSave}
+              maxLength={4}
+              selectTextOnFocus
+              autoFocus
+            />
+            <Text className="text-boxing-navy/40 dark:text-boxing-white/40 text-xs mt-2 text-center">
+              {hint}
+            </Text>
+            <View className="flex-row gap-3 mt-5">
+              <Button
+                size="md"
+                action="secondary"
+                className="flex-1 rounded-xl !bg-boxing-navy/10 dark:!bg-boxing-white/10"
+                onPress={onClose}
+              >
+                <ButtonText className="!text-boxing-navy dark:!text-boxing-white">
+                  Annuler
+                </ButtonText>
+              </Button>
+              <Button
+                size="md"
+                action="primary"
+                className="flex-1 rounded-xl !bg-boxing-navy dark:!bg-boxing-blue"
+                onPress={handleSave}
+              >
+                <ButtonText className="font-bold">OK</ButtonText>
+              </Button>
+            </View>
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+interface ConfigRowProps {
+  label: string;
+  display: string;
+  onEdit: () => void;
+}
+
+function ConfigRow({ label, display, onEdit }: ConfigRowProps) {
+  return (
+    <View className="flex-row items-center justify-between w-full px-8 py-3">
+      <Text className="text-boxing-navy dark:text-boxing-sky text-xs font-semibold uppercase tracking-widest">
         {label}
       </Text>
       <View className="flex-row items-center gap-3">
-        <Button
-          size="sm"
-          action="secondary"
-          className="rounded-full !bg-boxing-navy/20 dark:!bg-boxing-white/10"
-          onPress={onDecrement}
-        >
-          <ButtonText className="!text-boxing-navy dark:!text-boxing-white font-bold">
-            −
-          </ButtonText>
-        </Button>
-        <Text className="text-boxing-navy dark:text-boxing-white font-bold text-sm w-20 text-center">
-          {value}
+        <Text className="text-boxing-navy dark:text-boxing-white font-bold text-sm">
+          {display}
         </Text>
-        <Button
-          size="sm"
-          action="secondary"
-          className="rounded-full !bg-boxing-navy/20 dark:!bg-boxing-white/10"
-          onPress={onIncrement}
+        <Pressable
+          onPress={onEdit}
+          className="p-1"
+          hitSlop={8}
         >
-          <ButtonText className="!text-boxing-navy dark:!text-boxing-white font-bold">
-            +
-          </ButtonText>
-        </Button>
+          <MaterialCommunityIcons
+            name="pencil-outline"
+            size={18}
+            color="#64b5f6"
+          />
+        </Pressable>
       </View>
     </View>
   );
 }
 
+type EditTarget = "rounds" | "roundDuration" | "restDuration" | null;
+
 export default function Timer() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [currentRound, setCurrentRound] = useState(1);
   const [config, setConfig] = useState<Config>(DEFAULTS);
+  const [editing, setEditing] = useState<EditTarget>(null);
 
-  // Refs to avoid stale closures inside onExpire
   const phaseRef = useRef<Phase>("idle");
   const roundRef = useRef(1);
   const configRef = useRef<Config>(DEFAULTS);
@@ -85,34 +156,42 @@ export default function Timer() {
   roundRef.current = currentRound;
   configRef.current = config;
 
-  const { seconds, minutes, isRunning, start, pause, resume, restart } =
-    useTimer({
-      expiryTimestamp: makeExpiry(DEFAULTS.roundDuration),
-      autoStart: false,
-      interval: 1000,
-      onExpire: () => {
-        const p = phaseRef.current;
-        const round = roundRef.current;
-        const cfg = configRef.current;
-
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-        if (p === "round") {
-          if (round < cfg.rounds) {
-            setPhase("rest");
-            restart(makeExpiry(cfg.restDuration), true);
-          } else {
-            setPhase("done");
-          }
-        } else if (p === "rest") {
-          setCurrentRound((r) => r + 1);
-          setPhase("round");
-          restart(makeExpiry(cfg.roundDuration), true);
-        }
-      },
+  useEffect(() => {
+    AsyncStorage.getItem(STORAGE_KEY).then((val) => {
+      if (val) setConfig(JSON.parse(val));
     });
+  }, []);
 
-  // 10-second warning
+  useEffect(() => {
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+  }, [config]);
+
+  const { seconds, minutes, isRunning, pause, resume, restart } = useTimer({
+    expiryTimestamp: makeExpiry(DEFAULTS.roundDuration),
+    autoStart: false,
+    interval: 1000,
+    onExpire: () => {
+      const p = phaseRef.current;
+      const round = roundRef.current;
+      const cfg = configRef.current;
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      if (p === "round") {
+        if (round < cfg.rounds) {
+          setPhase("rest");
+          restart(makeExpiry(cfg.restDuration), true);
+        } else {
+          setPhase("done");
+        }
+      } else if (p === "rest") {
+        setCurrentRound((r) => r + 1);
+        setPhase("round");
+        restart(makeExpiry(cfg.roundDuration), true);
+      }
+    },
+  });
+
   useEffect(() => {
     if (isRunning && minutes === 0 && seconds === 10) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -137,12 +216,10 @@ export default function Timer() {
     restart(makeExpiry(config.roundDuration), false);
   };
 
-  const updateConfig = (key: keyof Config, delta: number) => {
+  const handleSave = (key: keyof Config, value: number) => {
     setConfig((prev) => {
-      const next = { ...prev, [key]: prev[key] + delta };
-      if (key === "rounds") next.rounds = Math.min(12, Math.max(1, next.rounds));
-      if (key === "roundDuration") next.roundDuration = Math.min(600, Math.max(60, next.roundDuration));
-      if (key === "restDuration") next.restDuration = Math.min(180, Math.max(30, next.restDuration));
+      const next = { ...prev, [key]: value };
+      if (phase === "idle") restart(makeExpiry(next.roundDuration), false);
       return next;
     });
   };
@@ -150,7 +227,6 @@ export default function Timer() {
   const isRest = phase === "rest";
   const isDone = phase === "done";
 
-  // Static display when idle, live countdown otherwise
   const timerDisplay =
     phase === "idle"
       ? `${pad(Math.floor(config.roundDuration / 60))}:${pad(config.roundDuration % 60)}`
@@ -165,12 +241,11 @@ export default function Timer() {
           ? `Repos · Round ${currentRound + 1} →`
           : `${config.rounds} rounds terminés`;
 
-  const statusLabel =
-    isRunning
-      ? isRest ? "Repos" : "En cours"
-      : phase === "idle" ? "Prêt"
-      : phase === "done" ? "Terminé"
-      : "En pause";
+  const statusLabel = isRunning
+    ? isRest ? "Repos" : "En cours"
+    : phase === "idle" ? "Prêt"
+    : phase === "done" ? "Terminé"
+    : "En pause";
 
   const toggleLabel =
     isRunning ? "Pause" : phase === "idle" ? "Démarrer" : "Reprendre";
@@ -217,37 +292,12 @@ export default function Timer() {
         {statusLabel}
       </Text>
 
-      {phase === "idle" && (
-        <View className="mt-10 w-full">
-          <ConfigRow
-            label="Rounds"
-            value={String(config.rounds)}
-            onDecrement={() => updateConfig("rounds", -1)}
-            onIncrement={() => updateConfig("rounds", 1)}
-          />
-          <ConfigRow
-            label="Durée"
-            value={fmtDuration(config.roundDuration)}
-            onDecrement={() => updateConfig("roundDuration", -60)}
-            onIncrement={() => updateConfig("roundDuration", 60)}
-          />
-          <ConfigRow
-            label="Repos"
-            value={fmtDuration(config.restDuration)}
-            onDecrement={() => updateConfig("restDuration", -30)}
-            onIncrement={() => updateConfig("restDuration", 30)}
-          />
-        </View>
-      )}
-
       <View className="flex-row gap-4 mt-10">
         <Button
           size="xl"
           action="primary"
           className={`rounded-full ${
-            isRest
-              ? "!bg-boxing-blue"
-              : "!bg-boxing-navy dark:!bg-boxing-blue"
+            isRest ? "!bg-boxing-blue" : "!bg-boxing-navy dark:!bg-boxing-blue"
           }`}
           onPress={handleToggle}
           isDisabled={isDone}
@@ -268,6 +318,57 @@ export default function Timer() {
           </ButtonText>
         </Button>
       </View>
+
+      {phase === "idle" && (
+        <View className="mt-8 w-full">
+          <ConfigRow
+            label="Rounds"
+            display={String(config.rounds)}
+            onEdit={() => setEditing("rounds")}
+          />
+          <ConfigRow
+            label="Durée"
+            display={fmtDuration(config.roundDuration)}
+            onEdit={() => setEditing("roundDuration")}
+          />
+          <ConfigRow
+            label="Repos"
+            display={fmtDuration(config.restDuration)}
+            onEdit={() => setEditing("restDuration")}
+          />
+        </View>
+      )}
+
+      <EditModal
+        visible={editing === "rounds"}
+        label="Rounds"
+        value={config.rounds}
+        hint="1 – 12"
+        min={1}
+        max={12}
+        onSave={(v) => handleSave("rounds", v)}
+        onClose={() => setEditing(null)}
+      />
+      <EditModal
+        visible={editing === "roundDuration"}
+        label="Durée du round (sec)"
+        value={config.roundDuration}
+        hint="30 – 600  ·  ex : 180 = 3 min"
+        min={30}
+        max={600}
+        onSave={(v) => handleSave("roundDuration", v)}
+        onClose={() => setEditing(null)}
+      />
+      <EditModal
+        visible={editing === "restDuration"}
+        label="Temps de repos (sec)"
+        value={config.restDuration}
+        hint="15 – 300  ·  ex : 60 = 1 min"
+        min={15}
+        max={300}
+        onSave={(v) => handleSave("restDuration", v)}
+        onClose={() => setEditing(null)}
+      />
     </View>
   );
 }
