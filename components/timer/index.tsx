@@ -343,9 +343,9 @@ export default function Timer() {
         visible={editing === "rounds"}
         label="Rounds"
         value={config.rounds}
-        hint="1 – 12"
+        hint="1 – 100"
         min={1}
-        max={12}
+        max={100}
         onSave={(v) => handleSave("rounds", v)}
         onClose={() => setEditing(null)}
       />
@@ -353,9 +353,9 @@ export default function Timer() {
         visible={editing === "roundDuration"}
         label="Durée du round (sec)"
         value={config.roundDuration}
-        hint="30 – 600  ·  ex : 180 = 3 min"
-        min={30}
-        max={600}
+        hint="1 – 300  ·  ex : 180 = 3 min"
+        min={1}
+        max={300}
         onSave={(v) => handleSave("roundDuration", v)}
         onClose={() => setEditing(null)}
       />
@@ -363,8 +363,8 @@ export default function Timer() {
         visible={editing === "restDuration"}
         label="Temps de repos (sec)"
         value={config.restDuration}
-        hint="15 – 300  ·  ex : 60 = 1 min"
-        min={15}
+        hint="1 – 300  ·  ex : 60 = 1 min"
+        min={1}
         max={300}
         onSave={(v) => handleSave("restDuration", v)}
         onClose={() => setEditing(null)}
