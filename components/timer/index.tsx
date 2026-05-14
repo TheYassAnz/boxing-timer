@@ -1,6 +1,8 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
+import { useKeepAwake } from "expo-keep-awake";
 import { useEffect, useRef, useState } from "react";
 import { Modal, Pressable, Text, TextInput, View } from "react-native";
 import { useTimer } from "react-timer-hook";
@@ -44,7 +46,16 @@ interface EditModalProps {
   onClose: () => void;
 }
 
-function EditModal({ visible, label, value, hint, min, max, onSave, onClose }: EditModalProps) {
+function EditModal({
+  visible,
+  label,
+  value,
+  hint,
+  min,
+  max,
+  onSave,
+  onClose,
+}: EditModalProps) {
   const [text, setText] = useState(String(value));
 
   useEffect(() => {
@@ -58,7 +69,12 @@ function EditModal({ visible, label, value, hint, min, max, onSave, onClose }: E
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
       <Pressable
         className="flex-1 items-center justify-center bg-black/60"
         onPress={onClose}
@@ -125,11 +141,7 @@ function ConfigRow({ label, display, onEdit }: ConfigRowProps) {
         <Text className="text-boxing-navy dark:text-boxing-white font-bold text-sm">
           {display}
         </Text>
-        <Pressable
-          onPress={onEdit}
-          className="p-1"
-          hitSlop={8}
-        >
+        <Pressable onPress={onEdit} className="p-1" hitSlop={8}>
           <MaterialCommunityIcons
             name="pencil-outline"
             size={18}
@@ -144,6 +156,8 @@ function ConfigRow({ label, display, onEdit }: ConfigRowProps) {
 type EditTarget = "rounds" | "roundDuration" | "restDuration" | null;
 
 export default function Timer() {
+  useKeepAwake();
+
   const [phase, setPhase] = useState<Phase>("idle");
   const [currentRound, setCurrentRound] = useState(1);
   const [config, setConfig] = useState<Config>(DEFAULTS);
@@ -152,9 +166,25 @@ export default function Timer() {
   const phaseRef = useRef<Phase>("idle");
   const roundRef = useRef(1);
   const configRef = useRef<Config>(DEFAULTS);
+  const bellRef = useRef<Audio.Sound | null>(null);
   phaseRef.current = phase;
   roundRef.current = currentRound;
   configRef.current = config;
+
+  useEffect(() => {
+    Audio.Sound.createAsync(require("../../assets/sounds/boxing_bell.wav"))
+      .then(({ sound }) => {
+        bellRef.current = sound;
+      })
+      .catch(() => {});
+    return () => {
+      bellRef.current?.unloadAsync();
+    };
+  }, []);
+
+  const playBell = () => {
+    bellRef.current?.replayAsync().catch(() => {});
+  };
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((val) => {
@@ -175,12 +205,12 @@ export default function Timer() {
       const round = roundRef.current;
       const cfg = configRef.current;
 
+      playBell();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
       if (p === "round") {
         if (round < cfg.rounds) {
           setPhase("rest");
-          // setTimeout defers restart until after react-timer-hook sets isRunning=false internally
           setTimeout(() => restart(makeExpiry(cfg.restDuration), true), 0);
         } else {
           setPhase("done");
@@ -188,6 +218,7 @@ export default function Timer() {
       } else if (p === "rest") {
         setCurrentRound((r) => r + 1);
         setPhase("round");
+        playBell();
         setTimeout(() => restart(makeExpiry(cfg.roundDuration), true), 0);
       }
     },
@@ -204,6 +235,7 @@ export default function Timer() {
     if (isRunning) {
       pause();
     } else if (phase === "idle") {
+      playBell();
       setPhase("round");
       restart(makeExpiry(config.roundDuration), true);
     } else {
@@ -243,13 +275,20 @@ export default function Timer() {
           : `${config.rounds} rounds terminés`;
 
   const statusLabel = isRunning
-    ? isRest ? "Repos" : "En cours"
-    : phase === "idle" ? "Prêt"
-    : phase === "done" ? "Terminé"
-    : "En pause";
+    ? isRest
+      ? "Repos"
+      : "En cours"
+    : phase === "idle"
+      ? "Prêt"
+      : phase === "done"
+        ? "Terminé"
+        : "En pause";
 
-  const toggleLabel =
-    isRunning ? "Pause" : phase === "idle" ? "Démarrer" : "Reprendre";
+  const toggleLabel = isRunning
+    ? "Pause"
+    : phase === "idle"
+      ? "Démarrer"
+      : "Reprendre";
 
   return (
     <View
