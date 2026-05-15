@@ -16,13 +16,6 @@ export default function TabLayout() {
           }
         />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="about" options={{ title: "About" }}>
-        <Icon
-          src={
-            <VectorIcon family={MaterialCommunityIcons} name="information" />
-          }
-        />
-      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }

@@ -1,9 +1,5 @@
-import { Text, View } from "react-native";
+import Timer from "@/components/timer";
 
 export default function Index() {
-  return (
-    <View>
-      <Text>Timer Screen</Text>
-    </View>
-  );
+  return <Timer />;
 }
