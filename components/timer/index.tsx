@@ -1,6 +1,6 @@
 import { Motion } from "@legendapp/motion";
 import { useKeepAwake } from "expo-keep-awake";
-import { Text, useWindowDimensions, View } from "react-native";
+import { Platform, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PresetPicker } from "@/components/native/PresetPicker";
 import { RoundButton } from "@/components/native/RoundButton";
@@ -48,11 +48,12 @@ export default function Timer() {
       style={{
         backgroundColor: isIdle ? palette.groupedBg : palette.bg,
         paddingTop: insets.top,
-        paddingBottom: insets.bottom,
+        // iOS: the floating tab bar overlays the screen; Android: the tab bar already sits above the inset.
+        paddingBottom: Platform.OS === "ios" ? insets.bottom : 0,
       }}
     >
       <Motion.View
-        key={isIdle ? "idle" : phase}
+        key={phase}
         style={{ flex: 1 }}
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -111,7 +112,6 @@ export default function Timer() {
                 <Text
                   className="text-8xl font-extralight"
                   numberOfLines={1}
-                  adjustsFontSizeToFit
                   style={{ color: palette.text, fontVariant: ["tabular-nums"] }}
                 >
                   {pad(minutes)}:{pad(seconds)}
@@ -126,14 +126,14 @@ export default function Timer() {
             </ProgressRing>
             <View className="w-full flex-row justify-between px-4 mt-12">
               <RoundButton
-                label="Réinitialiser"
+                label="Réinit."
                 onPress={reset}
                 tone="neutral"
                 size={80}
                 color={palette.neutral}
               />
               <RoundButton
-                label={isRunning ? "Pause" : "Reprendre"}
+                label={isDone ? "Terminé" : isRunning ? "Pause" : "Reprendre"}
                 onPress={toggle}
                 tone="accent"
                 size={80}

@@ -14,9 +14,11 @@ import {
   UNLIMITED,
   LIMITS,
 } from "@/components/timer/config";
+import { usePalette } from "@/components/timer/theme";
 import type { SettingsListProps } from "./SettingsList";
 
 export function SettingsList({ config, onChange, tint }: SettingsListProps) {
+  const { neutral, text, bg } = usePalette("idle");
   const row = (
     key: keyof Config,
     label: string,
@@ -28,7 +30,7 @@ export function SettingsList({ config, onChange, tint }: SettingsListProps) {
     const btn = (d: 1 | -1) => (
       <FilledTonalIconButton
         enabled={d < 0 ? v > min : v < max}
-        colors={{ contentColor: tint }}
+        colors={{ containerColor: neutral, contentColor: tint }}
         onClick={() => onChange({ ...config, [key]: step(v, d) })}
       >
         <Text style={{ fontSize: 20, fontWeight: "600" }}>
@@ -37,7 +39,14 @@ export function SettingsList({ config, onChange, tint }: SettingsListProps) {
       </FilledTonalIconButton>
     );
     return (
-      <ListItem key={key}>
+      <ListItem
+        key={key}
+        colors={{
+          containerColor: bg,
+          contentColor: text,
+          trailingContentColor: text,
+        }}
+      >
         <ListItem.HeadlineContent>
           <Text>{label}</Text>
         </ListItem.HeadlineContent>

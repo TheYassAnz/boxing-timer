@@ -6,7 +6,7 @@ import {
   Text,
 } from "@expo/ui/jetpack-compose";
 import { size as sizeMod } from "@expo/ui/jetpack-compose/modifiers";
-import { useColorScheme } from "react-native";
+import { usePalette } from "@/components/timer/theme";
 import type { RoundButtonProps } from "./RoundButton";
 
 export function RoundButton({
@@ -17,32 +17,29 @@ export function RoundButton({
   color,
   disabled = false,
 }: RoundButtonProps) {
-  const onAccent = useColorScheme() === "dark" ? "#141218" : "#FFFFFF";
+  const { text, bg } = usePalette("idle");
+  const r = size / 2;
   const Btn = tone === "accent" ? Button : FilledTonalButton;
   return (
     <Host matchContents style={{ width: size, height: size }}>
       <Btn
         onClick={onPress}
         enabled={!disabled}
-        shape={Shape.Circle({})}
+        // Shape.Circle({}) renders the button invisible; a full corner radius draws the disc.
+        shape={Shape.RoundedCorner({
+          cornerRadii: { topStart: r, topEnd: r, bottomStart: r, bottomEnd: r },
+        })}
         contentPadding={{ start: 0, top: 0, end: 0, bottom: 0 }}
-        colors={
-          tone === "accent"
-            ? { containerColor: color, contentColor: onAccent }
-            : { containerColor: color }
-        }
+        colors={{
+          containerColor: color,
+          contentColor: tone === "accent" ? bg : text,
+        }}
         modifiers={[sizeMod(size, size)]}
       >
         <Text
           maxLines={1}
           softWrap={false}
-          style={{
-            // Compose Text has no auto-shrink: scale long labels to fit the disc.
-            fontSize: Math.round(
-              Math.min(size * 0.18, (size * 1.4) / label.length),
-            ),
-            fontWeight: "600",
-          }}
+          style={{ fontSize: Math.round(size * 0.18), fontWeight: "600" }}
         >
           {label}
         </Text>

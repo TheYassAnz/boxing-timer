@@ -35,7 +35,7 @@ export function RoundButton({
       >
         <Text
           modifiers={[
-            font({ size: Math.round(size * 0.2), weight: "semibold" }),
+            font({ size: Math.round(size * 0.18), weight: "semibold" }),
             foregroundStyle(tone === "accent" ? color : "primary"),
             lineLimit(1),
             minimumScaleFactor(0.6),

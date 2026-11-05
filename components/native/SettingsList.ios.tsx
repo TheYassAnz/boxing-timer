@@ -24,7 +24,6 @@ import {
   type Config,
   fmtClock,
   fromMinSec,
-  stepRounds,
   UNLIMITED,
 } from "@/components/timer/config";
 import type { SettingsListProps } from "./SettingsList";
@@ -108,11 +107,7 @@ export function SettingsList({ config, onChange, tint }: SettingsListProps) {
             value={config.rounds}
             min={UNLIMITED}
             max={100}
-            onValueChange={(v) =>
-              set({
-                rounds: stepRounds(config.rounds, v > config.rounds ? 1 : -1),
-              })
-            }
+            onValueChange={(v) => set({ rounds: v })}
           />
           {durationRow("roundDuration", "Durée du round")}
           {durationRow("restDuration", "Repos")}

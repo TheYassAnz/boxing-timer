@@ -26,9 +26,12 @@ export function useBoxingTimer(
       const next = tick(state, config, Date.now());
       if (next.transitions > 0) {
         sounds.bell();
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        // Haptics reject on devices without a vibrator (e.g. Android emulator).
+        Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success,
+        ).catch(() => {});
       } else if (secondsLeft(state) > 10 && secondsLeft(next.state) <= 10) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
       }
       if (shouldClap(state, next.state, next.transitions)) sounds.clap();
       setState(next.state);
