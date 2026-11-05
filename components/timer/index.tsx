@@ -1,40 +1,27 @@
 import { Motion } from "@legendapp/motion";
 import { useKeepAwake } from "expo-keep-awake";
-import { useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  useColorScheme,
-  useWindowDimensions,
-  View,
-} from "react-native";
-import { Button, ButtonText } from "@/components/ui/button";
-import { useSound } from "@/hooks/useSound";
+import { Text, useWindowDimensions, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PresetPicker } from "@/components/native/PresetPicker";
+import { RoundButton } from "@/components/native/RoundButton";
+import { SettingsList } from "@/components/native/SettingsList";
 import { useBoxingTimer } from "@/hooks/useBoxingTimer";
+import { useSound } from "@/hooks/useSound";
 import { useStoredConfig } from "@/hooks/useStoredConfig";
-import ConfigRow from "./ConfigRow";
-import EditModal from "./EditModal";
 import ProgressRing from "./ProgressRing";
-import { type Config, fmtDuration, pad, PRESETS, sameConfig } from "./config";
+import { pad, PRESETS, presetIndex, roundLabel } from "./config";
+import { usePalette } from "./theme";
 
-type EditTarget = keyof Config | null;
-
-const RING = {
-  light: { color: "#274c77", track: "rgba(39,76,119,0.12)" },
-  dark: { color: "#6096ba", track: "rgba(231,236,239,0.1)" },
-  rest: { color: "#a3cef1", track: "rgba(231,236,239,0.15)" },
-};
+const PRESET_LABELS = PRESETS.map((p) => p.label);
 
 export default function Timer() {
   useKeepAwake();
 
   const [config, setConfig] = useStoredConfig();
-  const [editing, setEditing] = useState<EditTarget>(null);
   const playBell = useSound(require("@/assets/sounds/boxing_bell.wav"));
   const playClap = useSound(require("@/assets/sounds/clapper.wav"));
-  const scheme = useColorScheme();
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const {
     phase,
     currentRound,
@@ -43,232 +30,120 @@ export default function Timer() {
     remainingMs,
     progress,
     isRunning,
-    toggle: handleToggle,
-    reset: handleReset,
+    toggle,
+    reset,
   } = useBoxingTimer(config, { bell: playBell, clap: playClap });
+  const palette = usePalette(phase);
 
-  const handleSave = (key: keyof Config, value: number) =>
-    setConfig({ ...config, [key]: value });
-
-  const isRest = phase === "rest";
+  const isIdle = phase === "idle";
   const isDone = phase === "done";
-  const ring = isRest ? RING.rest : scheme === "dark" ? RING.dark : RING.light;
-  const ringSize = Math.min(width - 48, 320);
   const pulse =
-    isRunning &&
-    remainingMs <= 10_000 &&
-    Math.floor(remainingMs / 500) % 2 === 0;
+    isRunning && remainingMs <= 10_000 && Math.floor(remainingMs / 500) % 2 === 0;
 
-  const timerDisplay =
-    phase === "idle"
-      ? `${pad(Math.floor(config.roundDuration / 60))}:${pad(config.roundDuration % 60)}`
-      : `${pad(minutes)}:${pad(seconds)}`;
-
-  const roundLabel =
-    phase === "idle"
-      ? `${config.rounds} rounds · ${fmtDuration(config.roundDuration)}`
-      : phase === "round"
-        ? `Round ${currentRound} / ${config.rounds}`
-        : phase === "rest"
-          ? `Repos · Round ${currentRound + 1} →`
-          : `${config.rounds} rounds terminés`;
-
-  const statusLabel = isRunning
-    ? isRest
-      ? "Repos"
-      : "En cours"
-    : phase === "idle"
-      ? "Prêt"
-      : phase === "done"
-        ? "Terminé"
-        : "En pause";
-
-  const toggleLabel = isRunning
-    ? "Pause"
-    : phase === "idle"
-      ? "Démarrer"
-      : "Reprendre";
-
-  const secondaryText = isRest
-    ? "text-boxing-sky"
-    : "text-boxing-blue dark:text-boxing-sky";
+  const status = isDone ? "Terminé" : isRunning ? "En cours" : "En pause";
 
   return (
     <View
-      className={`flex-1 ${
-        isRest
-          ? "bg-boxing-navy dark:bg-boxing-navy"
-          : "bg-boxing-white dark:bg-boxing-dark"
-      }`}
+      className="flex-1"
+      style={{
+        backgroundColor: isIdle ? palette.groupedBg : palette.bg,
+        paddingTop: insets.top,
+        paddingBottom: insets.bottom,
+      }}
     >
-      <ScrollView contentContainerClassName="flex-grow items-center justify-center px-6 py-12">
-        <Motion.View
-          key={phase}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "timing", duration: 150 }}
-        >
-          <View className="items-center">
+      <Motion.View
+        key={isIdle ? "idle" : phase}
+        style={{ flex: 1 }}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "timing", duration: 150 }}
+      >
+        {isIdle ? (
+          <View className="flex-1">
+            <View className="px-4 pt-2 pb-3 gap-3">
+              <Text
+                className="text-[34px] font-bold"
+                style={{ color: palette.text }}
+              >
+                Timer
+              </Text>
+              <PresetPicker
+                labels={PRESET_LABELS}
+                selectedIndex={presetIndex(config)}
+                onSelect={(i) => setConfig(PRESETS[i].config)}
+              />
+            </View>
+            <View className="flex-1">
+              <SettingsList
+                config={config}
+                onChange={setConfig}
+                tint={palette.accent}
+              />
+            </View>
+            <View className="items-center py-6">
+              <RoundButton
+                label="Démarrer"
+                onPress={toggle}
+                tone="accent"
+                size={96}
+                color={palette.accent}
+              />
+            </View>
+          </View>
+        ) : (
+          <View className="flex-1 items-center justify-center px-4">
             <Text
-              className={`text-sm font-semibold uppercase tracking-widest mb-4 ${secondaryText}`}
+              className="text-xl font-semibold mb-6"
+              style={{ color: palette.secondary }}
             >
-              {roundLabel}
+              {phase === "rest" ? "Repos" : roundLabel(currentRound, config.rounds)}
             </Text>
-
             <ProgressRing
-              size={ringSize}
+              size={Math.min(width - 32, 340)}
               progress={progress}
-              color={ring.color}
-              trackColor={ring.track}
+              color={palette.accent}
+              trackColor={palette.track}
             >
               <Motion.View
-                animate={{ scale: pulse ? 1.02 : 1 }}
+                animate={{ scale: pulse ? 1.03 : 1 }}
                 transition={{ type: "timing", duration: 250 }}
               >
                 <Text
-                  className={`text-7xl font-black font-mono tracking-widest ${
-                    isRest
-                      ? "text-boxing-white"
-                      : "text-boxing-navy dark:text-boxing-white"
-                  }`}
+                  className="text-8xl font-extralight"
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  style={{ color: palette.text, fontVariant: ["tabular-nums"] }}
                 >
-                  {timerDisplay}
+                  {pad(minutes)}:{pad(seconds)}
                 </Text>
               </Motion.View>
               <Text
-                className={`text-xs font-semibold uppercase tracking-widest mt-2 ${secondaryText}`}
+                className="text-lg mt-1"
+                style={{ color: isDone ? palette.accent : palette.secondary }}
               >
-                {statusLabel}
+                {status}
               </Text>
             </ProgressRing>
-          </View>
-        </Motion.View>
-
-        <View className="flex-row gap-4 mt-10">
-          <Button
-            size="xl"
-            action="primary"
-            className={`rounded-full active:scale-[0.97] ${
-              isRest
-                ? "!bg-boxing-blue"
-                : "!bg-boxing-navy dark:!bg-boxing-blue"
-            }`}
-            onPress={handleToggle}
-            isDisabled={isDone}
-          >
-            <ButtonText className="uppercase tracking-widest font-bold">
-              {toggleLabel}
-            </ButtonText>
-          </Button>
-
-          <Button
-            size="xl"
-            action="negative"
-            className="rounded-full active:scale-[0.97] !bg-boxing-alert"
-            onPress={handleReset}
-          >
-            <ButtonText className="uppercase tracking-widest font-bold">
-              Reset
-            </ButtonText>
-          </Button>
-        </View>
-
-        {phase === "idle" && (
-          <View className="mt-8 w-full items-center">
-            <View className="flex-row gap-2">
-              {PRESETS.map((p) => {
-                const active = sameConfig(p.config, config);
-                return (
-                  <Pressable
-                    key={p.label}
-                    onPress={() => setConfig(p.config)}
-                    className={`rounded-full px-4 py-2 border active:scale-[0.97] ${
-                      active
-                        ? "bg-boxing-navy border-boxing-navy dark:bg-boxing-blue dark:border-boxing-blue"
-                        : "border-boxing-navy/30 dark:border-boxing-sky/40"
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-semibold uppercase tracking-widest ${
-                        active
-                          ? "text-boxing-white"
-                          : "text-boxing-navy dark:text-boxing-sky"
-                      }`}
-                    >
-                      {p.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <View className="mt-4 w-full">
-              <ConfigRow
-                label="Rounds"
-                display={String(config.rounds)}
-                onEdit={() => setEditing("rounds")}
+            <View className="w-full flex-row justify-between px-4 mt-12">
+              <RoundButton
+                label="Réinitialiser"
+                onPress={reset}
+                tone="neutral"
+                size={80}
+                color={palette.neutral}
               />
-              <ConfigRow
-                label="Durée"
-                display={fmtDuration(config.roundDuration)}
-                onEdit={() => setEditing("roundDuration")}
-              />
-              <ConfigRow
-                label="Repos"
-                display={fmtDuration(config.restDuration)}
-                onEdit={() => setEditing("restDuration")}
+              <RoundButton
+                label={isRunning ? "Pause" : "Reprendre"}
+                onPress={toggle}
+                tone="accent"
+                size={80}
+                color={palette.accent}
+                disabled={isDone}
               />
             </View>
           </View>
         )}
-      </ScrollView>
-
-      {isDone && (
-        <View className="absolute top-16 left-0 right-0 items-center">
-          <Motion.View
-            initial={{ opacity: 0, y: -40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "timing", duration: 200 }}
-          >
-            <View className="bg-boxing-alert px-8 py-3 rounded-full">
-              <Text className="text-boxing-white font-bold text-base uppercase tracking-widest">
-                Terminé !
-              </Text>
-            </View>
-          </Motion.View>
-        </View>
-      )}
-
-      <EditModal
-        visible={editing === "rounds"}
-        label="Rounds"
-        value={config.rounds}
-        hint="1 – 100"
-        min={1}
-        max={100}
-        onSave={(v) => handleSave("rounds", v)}
-        onClose={() => setEditing(null)}
-      />
-      <EditModal
-        visible={editing === "roundDuration"}
-        label="Durée du round (sec)"
-        value={config.roundDuration}
-        hint="1 – 300  ·  ex : 180 = 3 min"
-        min={1}
-        max={300}
-        onSave={(v) => handleSave("roundDuration", v)}
-        onClose={() => setEditing(null)}
-      />
-      <EditModal
-        visible={editing === "restDuration"}
-        label="Temps de repos (sec)"
-        value={config.restDuration}
-        hint="1 – 300  ·  ex : 60 = 1 min"
-        min={1}
-        max={300}
-        onSave={(v) => handleSave("restDuration", v)}
-        onClose={() => setEditing(null)}
-      />
+      </Motion.View>
     </View>
   );
 }

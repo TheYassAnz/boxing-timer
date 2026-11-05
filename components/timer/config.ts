@@ -38,12 +38,6 @@ export function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
-export function fmtDuration(s: number): string {
-  const m = Math.floor(s / 60);
-  const rem = s % 60;
-  return rem === 0 ? `${m} min` : `${m}:${pad(rem)}`;
-}
-
 export const PRESETS: { label: string; config: Config }[] = [
   { label: "Échauffement", config: { rounds: UNLIMITED, roundDuration: 30, restDuration: 30 } },
   { label: "Assauts", config: { rounds: UNLIMITED, roundDuration: 90, restDuration: 35 } },

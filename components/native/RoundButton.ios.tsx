@@ -7,6 +7,9 @@ import {
   font,
   foregroundStyle,
   frame,
+  lineLimit,
+  minimumScaleFactor,
+  padding,
   opacity,
   shapes,
 } from "@expo/ui/swift-ui/modifiers";
@@ -34,6 +37,9 @@ export function RoundButton({
           modifiers={[
             font({ size: Math.round(size * 0.2), weight: "semibold" }),
             foregroundStyle(tone === "accent" ? color : "primary"),
+            lineLimit(1),
+            minimumScaleFactor(0.6),
+            padding({ horizontal: 8 }),
             frame({ width: size, height: size }),
             // 8-digit hex = color at ~25% alpha, like the Clock app's tinted discs.
             background(`${color}40`, shapes.circle()),

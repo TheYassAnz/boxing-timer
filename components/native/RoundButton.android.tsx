@@ -33,7 +33,17 @@ export function RoundButton({
         }
         modifiers={[sizeMod(size, size)]}
       >
-        <Text style={{ fontSize: Math.round(size * 0.18), fontWeight: "600" }}>
+        <Text
+          maxLines={1}
+          softWrap={false}
+          style={{
+            // Compose Text has no auto-shrink: scale long labels to fit the disc.
+            fontSize: Math.round(
+              Math.min(size * 0.18, (size * 1.4) / label.length),
+            ),
+            fontWeight: "600",
+          }}
+        >
           {label}
         </Text>
       </Btn>
