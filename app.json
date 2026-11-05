@@ -10,7 +10,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ysma.boxing-timer"
+      "bundleIdentifier": "com.ysma.boxing-timer",
+      "infoPlist": {
+        "NSSupportsLiveActivities": true
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -38,8 +41,14 @@
       "expo-font",
       "expo-status-bar",
       "expo-web-browser",
-      "expo-audio",
-      "expo-asset"
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": true
+        }
+      ],
+      "expo-asset",
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "typedRoutes": true,
