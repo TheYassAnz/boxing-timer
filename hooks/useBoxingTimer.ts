@@ -6,13 +6,17 @@ import {
   pause,
   resume,
   secondsLeft,
+  shouldClap,
   start,
   tick,
 } from "@/components/timer/machine";
 
 export type { Phase } from "@/components/timer/machine";
 
-export function useBoxingTimer(config: Config, onBell: () => void) {
+export function useBoxingTimer(
+  config: Config,
+  sounds: { bell: () => void; clap: () => void },
+) {
   const [state, setState] = useState(() => idle(config));
   const isRunning = state.endsAt !== null;
 
@@ -21,22 +25,23 @@ export function useBoxingTimer(config: Config, onBell: () => void) {
     const id = setTimeout(() => {
       const next = tick(state, config, Date.now());
       if (next.transitions > 0) {
-        onBell();
+        sounds.bell();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else if (secondsLeft(state) > 10 && secondsLeft(next.state) <= 10) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       }
+      if (shouldClap(state, next.state, next.transitions)) sounds.clap();
       setState(next.state);
     }, 250);
     return () => clearTimeout(id);
-  }, [state, config, onBell, isRunning]);
+  }, [state, config, sounds, isRunning]);
 
   const toggle = () => {
     const now = Date.now();
     if (isRunning) {
       setState(pause(state, now));
     } else if (state.phase === "idle") {
-      onBell();
+      sounds.bell();
       setState(start(config, now));
     } else {
       setState(resume(state, now));

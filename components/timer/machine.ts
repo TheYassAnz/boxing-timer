@@ -71,3 +71,13 @@ export function tick(
 }
 
 export const secondsLeft = (s: TimerState) => Math.ceil(s.remaining / 1000);
+
+export const shouldClap = (
+  prev: TimerState,
+  next: TimerState,
+  transitions: number,
+) =>
+  transitions === 0 &&
+  next.phase === "round" &&
+  secondsLeft(prev) > 10 &&
+  secondsLeft(next) <= 10;

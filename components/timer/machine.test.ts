@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { fmtClock, fromMinSec, parseConfig, presetIndex, PRESETS, roundLabel, stepDuration, stepRounds, UNLIMITED } from "./config";
-import { idle, pause, resume, secondsLeft, start, tick } from "./machine";
+import { idle, pause, resume, secondsLeft, shouldClap, start, tick } from "./machine";
 
 const cfg = { rounds: 2, roundDuration: 3, restDuration: 2 };
 
@@ -123,4 +123,20 @@ test("illimité : ne termine jamais et rattrape l'arrière-plan", () => {
   assert.notEqual(r.state.phase, "done");
   assert.equal(r.state.round, 51);
   assert.equal(r.transitions, 100);
+});
+
+test("shouldClap : franchissement des 10 s en round uniquement", () => {
+  const c = { rounds: 3, roundDuration: 30, restDuration: 30 };
+  const s = start(c, 0);
+  const a = tick(s, c, 19_500);
+  const b = tick(a.state, c, 20_100);
+  assert.equal(shouldClap(a.state, b.state, b.transitions), true);
+  const b2 = tick(b.state, c, 20_400);
+  assert.equal(shouldClap(b.state, b2.state, b2.transitions), false);
+  const rest = tick(s, c, 30_000).state;
+  const r1 = tick(rest, c, 49_500), r2 = tick(r1.state, c, 50_100);
+  assert.equal(r2.state.phase, "rest");
+  assert.equal(shouldClap(r1.state, r2.state, r2.transitions), false);
+  const jump = tick(s, c, 81_000);
+  assert.equal(shouldClap(s, jump.state, jump.transitions), false);
 });

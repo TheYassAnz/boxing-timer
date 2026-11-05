@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
-import { useBell } from "@/hooks/useBell";
+import { useSound } from "@/hooks/useSound";
 import { useBoxingTimer } from "@/hooks/useBoxingTimer";
 import { useStoredConfig } from "@/hooks/useStoredConfig";
 import ConfigRow from "./ConfigRow";
@@ -31,7 +31,8 @@ export default function Timer() {
 
   const [config, setConfig] = useStoredConfig();
   const [editing, setEditing] = useState<EditTarget>(null);
-  const playBell = useBell();
+  const playBell = useSound(require("@/assets/sounds/boxing_bell.wav"));
+  const playClap = useSound(require("@/assets/sounds/clapper.wav"));
   const scheme = useColorScheme();
   const { width } = useWindowDimensions();
   const {
@@ -44,7 +45,7 @@ export default function Timer() {
     isRunning,
     toggle: handleToggle,
     reset: handleReset,
-  } = useBoxingTimer(config, playBell);
+  } = useBoxingTimer(config, { bell: playBell, clap: playClap });
 
   const handleSave = (key: keyof Config, value: number) =>
     setConfig({ ...config, [key]: value });
