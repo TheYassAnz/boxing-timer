@@ -11,6 +11,7 @@
     "test": "tsx --test components/**/*.test.ts"
   },
   "dependencies": {
+    "@expo/ui": "~58.0.27",
     "@expo/vector-icons": "^15.0.3",
     "@gluestack-ui/core": "^3.0.12",
     "@gluestack-ui/utils": "^3.0.13",
