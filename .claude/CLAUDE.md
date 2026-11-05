@@ -45,7 +45,7 @@ hooks/
 
 - **Styles** : NativeWind via `className` pour la mise en page ; couleurs inline depuis `usePalette` (`components/timer/theme.ts`). Ne jamais utiliser `StyleSheet.create`.
 - **Composants natifs** : contrôles interactifs dans `components/native/*.ios.tsx` / `*.android.tsx`, rendus dans un `Host` `@expo/ui`, props typées dans un `.d.ts` commun. Ne pas réinventer.
-- **Lancement** : Expo Go sur iPhone (`@expo/ui` y est embarqué) — pas de dev build ni de lib à code natif tiers.
+- **Lancement** : dev build (`npm run ios` / `npm run android` = `expo run:*`). Expo Go n'est plus supporté (son en arrière-plan, Live Activity). Libs natives autorisées via config plugins / modules Expo locaux ; `ios/` et `android/` sont générés (CNG), jamais committés.
 - **Icônes** : `@expo/vector-icons` — MaterialCommunityIcons en priorité (cohérence avec la nav).
 - **Imports** : alias `@/` pour la racine du projet (configuré dans tsconfig + babel).
 - **Pas de commentaires** sauf si le WHY est non-évident.
@@ -78,8 +78,8 @@ hooks/
 
 ```bash
 npm start          # Démarre Expo (scan QR code)
-npm run ios        # Simulateur iOS
-npm run android    # Émulateur Android
+npm run ios        # Build et lance le dev build iOS
+npm run android    # Build et lance le dev build Android
 npm run lint       # ESLint
 npm test           # Tests de la machine à états (node:test)
 ```
