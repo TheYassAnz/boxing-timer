@@ -41,3 +41,23 @@ export function fmtDuration(s: number): string {
   const rem = s % 60;
   return rem === 0 ? `${m} min` : `${m}:${pad(rem)}`;
 }
+
+export const PRESETS: { label: string; config: Config }[] = [
+  {
+    label: "Amateur",
+    config: { rounds: 3, roundDuration: 180, restDuration: 60 },
+  },
+  {
+    label: "Pro",
+    config: { rounds: 12, roundDuration: 180, restDuration: 60 },
+  },
+  {
+    label: "Sparring",
+    config: { rounds: 5, roundDuration: 120, restDuration: 30 },
+  },
+];
+
+export const sameConfig = (a: Config, b: Config) =>
+  a.rounds === b.rounds &&
+  a.roundDuration === b.roundDuration &&
+  a.restDuration === b.restDuration;

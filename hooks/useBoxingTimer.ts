@@ -46,11 +46,16 @@ export function useBoxingTimer(config: Config, onBell: () => void) {
   const reset = () => setState(idle(config));
 
   const secs = secondsLeft(state);
+  const phaseMs =
+    (state.phase === "rest" ? config.restDuration : config.roundDuration) *
+    1000;
   return {
     phase: state.phase,
     currentRound: state.round,
     minutes: Math.floor(secs / 60),
     seconds: secs % 60,
+    remainingMs: state.remaining,
+    progress: state.phase === "idle" ? 1 : state.remaining / phaseMs,
     isRunning,
     toggle,
     reset,

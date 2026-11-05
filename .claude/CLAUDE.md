@@ -8,7 +8,8 @@
 - **React** : 19.3 avec React Compiler activé (experimental)
 - **New Architecture** seule architecture (le champ `newArchEnabled` n'existe plus)
 - **Tabs** : `NativeTabs` depuis `expo-router/native-tabs` (Label/Icon/VectorIcon en sous-composants de `Trigger`)
-- **Animations** : @legendapp/motion + react-native-reanimated (installés, pas encore utilisés)
+- **Animations** : @legendapp/motion (utilisé — transitions de phase, pulsation 10s, banner). `Motion.View` sans `className` : mettre les styles sur un `View` enfant
+- **Anneau** : react-native-svg (`components/timer/ProgressRing.tsx`)
 - **Haptiques** : expo-haptics (utilisé — alerte 10s + fin de phase)
 - **Audio** : expo-audio (`useAudioPlayer` — `assets/sounds/boxing_bell.wav`)
 - **Keep-awake** : expo-keep-awake (utilisé — actif sur l'écran Timer)
@@ -30,8 +31,9 @@ assets/
 components/
   timer/
     index.tsx          # Écran Timer (affichage uniquement)
-    config.ts          # Type Config, DEFAULTS, LIMITS, parseConfig, formatage
+    config.ts          # Type Config, DEFAULTS, LIMITS, PRESETS, parseConfig, formatage
     machine.ts         # Machine à états pure (start/pause/resume/tick) + machine.test.ts
+    ProgressRing.tsx   # Anneau de progression SVG
     EditModal.tsx      # Modal d'édition d'une valeur
     ConfigRow.tsx      # Ligne de réglage avec bouton crayon
   ui/

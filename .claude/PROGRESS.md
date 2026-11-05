@@ -43,16 +43,17 @@ _Dernière mise à jour : 2026-05-14_
 | Correction pause au changement de phase     | ✅ Fait    | Remplacé par la machine à timestamps (phase 3)          |
 | Empêcher la mise en veille                  | ✅ Fait    | `useKeepAwake()` actif dès que l'écran Timer est monté                     |
 | Son de cloche                               | ✅ Fait    | expo-audio · `boxing_bell.wav` · démarrage + chaque changement de phase      |
-| Animations de transition de phase           | ❌ À faire | @legendapp/motion disponible                                               |
+| Animations de transition de phase           | ✅ Fait    | @legendapp/motion · phase 150ms, pulsation 10s, banner 200ms, boutons 0.97                                               |
 
 ---
 
 ## Backlog / Idées futures
 
 - [ ] Tab Community : partage de workouts (non prioritaire)
-- [ ] Préréglages (ex: 3×3 amateur, 3×5 pro, Sparring)
+- [x] Préréglages : Amateur 3×3min/1min, Pro 12×3min/1min, Sparring 5×2min/30s
 - [ ] Warmup / Cooldown optionnels
-- [ ] Timer circulaire (progress ring) — react-native-svg disponible
+- [x] Timer circulaire (progress ring) — react-native-svg
+- [ ] Notifications locales pour la cloche écran verrouillé (expo-notifications)
 - [ ] Widget iOS (si Expo le supporte)
 
 ---

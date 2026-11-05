@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { parseConfig } from "./config";
+import { parseConfig, PRESETS, sameConfig } from "./config";
 import { idle, pause, resume, secondsLeft, start, tick } from "./machine";
 
 const cfg = { rounds: 2, roundDuration: 3, restDuration: 2 };
@@ -66,4 +66,12 @@ test("parseConfig borne et ignore les valeurs invalides", () => {
     parseConfig('{"rounds":500,"roundDuration":"x","restDuration":0}'),
     { rounds: 100, roundDuration: 180, restDuration: 1 },
   );
+});
+
+test("les préréglages respectent les bornes et se reconnaissent", () => {
+  for (const p of PRESETS) {
+    assert.deepEqual(parseConfig(JSON.stringify(p.config)), p.config);
+    assert.ok(sameConfig(p.config, { ...p.config }));
+  }
+  assert.ok(!sameConfig(PRESETS[0].config, PRESETS[1].config));
 });

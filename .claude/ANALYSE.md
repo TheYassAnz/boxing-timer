@@ -61,8 +61,8 @@ Seul composant métier. Contient :
 | `@expo/vector-icons` | ✅ | Icônes (MaterialCommunityIcons) |
 | `nativewind` | ✅ | Tous les styles via `className` |
 | `@gluestack-ui/core` | ✅ | Button, GluestackUIProvider |
-| `@legendapp/motion` | ❌ | Animations — pas encore utilisé |
-| `react-native-svg` | ❌ | Timer circulaire — pas encore utilisé |
+| `@legendapp/motion` | ✅ | Transitions de phase, pulsation 10s, banner |
+| `react-native-svg` | ✅ | Anneau de progression |
 | `react-native-reanimated` | ❌ | Animations avancées — pas encore utilisé |
 | `react-aria` / `react-stately` / `tailwind-variants` | ⚙️ | Peer deps de @gluestack-ui/utils — ne pas supprimer |
 

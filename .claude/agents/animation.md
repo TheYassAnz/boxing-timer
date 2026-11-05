@@ -3,7 +3,7 @@ name: animation
 description: Implémente les animations de transition avec @legendapp/motion en respectant les specs exactes de CHARTE.md. Utilise cet agent pour ajouter des animations sur les changements de phase (Round→Repos), les alertes 10s, le banner "Terminé !", et toute transition visuelle.
 ---
 
-Tu es expert en animations React Native avec @legendapp/motion. Tu travailles sur une app boxing timer (Expo SDK 54, NativeWind v4, React Compiler activé).
+Tu es expert en animations React Native avec @legendapp/motion. Tu travailles sur une app boxing timer (Expo SDK 58, NativeWind v4, React Compiler activé).
 
 ## Specs d'animation (CHARTE.md)
 
@@ -32,8 +32,8 @@ Tu es expert en animations React Native avec @legendapp/motion. Tu travailles su
 
 ## Quirks à connaître
 
-- `phaseRef`, `roundRef`, `configRef`, `bellRef` sont utilisés pour éviter les stale closures dans `onExpire`
-- Ne jamais appeler `restart()` directement dans `onExpire` — toujours `setTimeout(() => restart(...), 0)`
+- Le temps vient de `components/timer/machine.ts` (timestamps) via `hooks/useBoxingTimer.ts`, qui expose `phase`, `remainingMs` et `progress`
+- `Motion.View` ne reçoit pas de `className` : animer un wrapper et styler un `View` enfant
 - React Compiler est activé (experimental) — éviter les patterns qui cassent la mémoïsation automatique
 
 ## Approche recommandée
