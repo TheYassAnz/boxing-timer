@@ -88,6 +88,7 @@ hooks/
 ```bash
 npm start          # Démarre Metro pour le dev build déjà installé (pas d'Expo Go)
 npm run ios        # Build et lance le dev build iOS
+npm run release    # Build Release autonome (JS embarqué) sur l'iPhone branché
 npm run android    # Build et lance le dev build Android
 npm run lint       # ESLint
 npm test           # Tests de la machine à états et de lockScreen (node:test)
