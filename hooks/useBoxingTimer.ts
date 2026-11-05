@@ -10,6 +10,7 @@ import {
   start,
   tick,
 } from "@/components/timer/machine";
+import { useBackgroundKeepAlive } from "@/hooks/useBackgroundKeepAlive";
 
 export type { Phase } from "@/components/timer/machine";
 
@@ -19,6 +20,7 @@ export function useBoxingTimer(
 ) {
   const [state, setState] = useState(() => idle(config));
   const isRunning = state.endsAt !== null;
+  useBackgroundKeepAlive(isRunning);
 
   useEffect(() => {
     if (!isRunning) return;
