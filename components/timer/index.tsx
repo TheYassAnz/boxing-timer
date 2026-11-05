@@ -124,21 +124,22 @@ export default function Timer() {
                 {status}
               </Text>
             </ProgressRing>
-            <View className="w-full flex-row justify-between px-4 mt-12">
+            <View className={`w-full flex-row px-4 mt-12 ${isDone ? "justify-end" : "justify-between"}`}>
+              {!isDone && (
+                <RoundButton
+                  label="Réinit."
+                  onPress={reset}
+                  tone="neutral"
+                  size={80}
+                  color={palette.neutral}
+                />
+              )}
               <RoundButton
-                label="Réinit."
-                onPress={reset}
-                tone="neutral"
-                size={80}
-                color={palette.neutral}
-              />
-              <RoundButton
-                label={isDone ? "Terminé" : isRunning ? "Pause" : "Reprendre"}
-                onPress={toggle}
+                label={isDone ? "Réinit." : isRunning ? "Pause" : "Reprendre"}
+                onPress={isDone ? reset : toggle}
                 tone="accent"
                 size={80}
                 color={palette.accent}
-                disabled={isDone}
               />
             </View>
           </View>

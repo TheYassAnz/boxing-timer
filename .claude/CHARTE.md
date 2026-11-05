@@ -10,10 +10,12 @@ Direction B : composants natifs (`@expo/ui`), couleurs système claires/sombres 
 | Fond groupé (`groupedBg`, écran réglages) | `#F2F2F7` | `#000000` | `#FEF7FF` | `#141218` |
 | Texte | `#000000` | `#FFFFFF` | `#1D1B20` | `#E6E0E9` |
 | Texte secondaire | `#8E8E93` | `#8E8E93` | `#49454F` | `#CAC4D0` |
-| Accent rouge (round, boutons) | `#FF3B30` | `#FF453A` | `#B3261E` | `#F2B8B5` |
+| Accent rouge (round, boutons) | `#FF3B30` | `#FF453A` | `#B3261E` | `#FF5449` |
 | Vert (repos) | `#34C759` | `#30D158` | `#146C2E` | `#7DDB8A` |
 | Piste de l'anneau | `#E5E5EA` | `#2C2C2E` | `#E6E0E9` | `#36343B` |
 | Neutre (bouton Réinit.) | `#8E8E93` | `#8E8E93` | `#E6E0E9` | `#36343B` |
+
+Les valeurs sont des copies hex fixes des couleurs système (pas `PlatformColor`) : l'anneau SVG et les boutons ronds teintés avec alpha exigent du hex.
 
 L'accent vaut le rouge pendant le round et le vert pendant le repos (`phase === "rest"`). Aucune autre couleur.
 
@@ -26,7 +28,7 @@ L'accent vaut le rouge pendant le round et le vert pendant le repos (`phase === 
 ## Boutons
 
 - Ronds, natifs : **Démarrer 96 pt**, **Réinit. et Pause/Reprendre 80 pt** (pensés pour des mains nues et rapides).
-- Réinit. à gauche (neutre), Pause/Reprendre à droite (accent). Appui simple, sans confirmation.
+- Réinit. à gauche (neutre), Pause/Reprendre à droite (accent). Séance terminée : seul le bouton d'accent « Réinit. » reste, à droite. Appui simple, sans confirmation.
 - Composants dans `components/native/` (`RoundButton`, `PresetPicker`, `SettingsList`), variantes `.ios.tsx` / `.android.tsx`.
 
 ## Mise en page

@@ -8,7 +8,7 @@
 - **React** : 19.3 avec React Compiler activé (experimental)
 - **New Architecture** seule architecture (le champ `newArchEnabled` n'existe plus)
 - **Tabs** : `NativeTabs` depuis `expo-router/native-tabs` (Label/Icon/VectorIcon en sous-composants de `Trigger`)
-- **Animations** : @legendapp/motion (utilisé — transitions de phase, pulsation 10s, banner). `Motion.View` sans `className` : mettre les styles sur un `View` enfant
+- **Animations** : @legendapp/motion (utilisé — transitions de phase, pulsation 10s). `Motion.View` sans `className` : mettre les styles sur un `View` enfant
 - **Anneau** : react-native-svg (`components/timer/ProgressRing.tsx`)
 - **Haptiques** : expo-haptics (utilisé — alerte 10s + fin de phase)
 - **Audio** : expo-audio via `useSound` — cloche `assets/sounds/boxing_bell.wav`, claquoir `assets/sounds/clapper.wav` (synthétisé, voir `assets/sounds/CREDITS.md`)
@@ -59,7 +59,7 @@ hooks/
 - L'ordre des phases : `idle → round → rest → round → … → done`
 - Les alertes haptiques se déclenchent **10 secondes avant** la fin de chaque phase.
 - Le son de cloche se joue au **démarrage** et à chaque **changement de phase**.
-- Le claquoir (`clapper.wav`) joue pendant les **10 dernières secondes de chaque round** (pas du repos).
+- Le claquoir (`clapper.wav`) joue au passage des 10 dernières secondes de chaque round (un seul clip à la marque des 10 s, pas pendant le repos).
 - Boutons : Réinitialiser (« Réinit. ») et Pause/Reprendre ~80 pt, Démarrer ~96 pt.
 - La config est persistée via AsyncStorage et rechargée au mount.
 

@@ -35,7 +35,8 @@ Tu es expert en débogage React Native / Expo. Tu connais précisément la stack
 
 - `components/timer/machine.ts` — machine à états pure (+ `machine.test.ts`)
 - `hooks/useBoxingTimer.ts` — branchement React (tick, cloche, haptiques)
-- `hooks/useBell.ts`, `hooks/useStoredConfig.ts` — audio, persistance
+- `hooks/useSound.ts`, `hooks/useStoredConfig.ts` — audio, persistance
+- `components/native/*.ios.tsx` / `*.android.tsx` — contrôles `@expo/ui`; `components/timer/theme.ts` — palette
 - `components/timer/index.tsx` — affichage
 - `app.json` — config Expo (React Compiler, plugins)
 

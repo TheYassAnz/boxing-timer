@@ -51,7 +51,7 @@ const PALETTES: Record<"ios" | "android", Record<"light" | "dark", Scheme>> = {
       groupedBg: "#141218",
       text: "#E6E0E9",
       secondary: "#CAC4D0",
-      red: "#F2B8B5",
+      red: "#FF5449",
       green: "#7DDB8A",
       track: "#36343B",
       neutral: "#36343B",
