@@ -1,4 +1,4 @@
-import type { Config } from "./config";
+import { UNLIMITED, type Config } from "./config";
 
 export type Phase = "idle" | "round" | "rest" | "done";
 
@@ -47,7 +47,8 @@ export function tick(
   while (state.endsAt !== null && now >= state.endsAt) {
     transitions++;
     const end = state.endsAt;
-    if (state.phase === "round" && state.round < cfg.rounds) {
+    if (state.phase === "round" &&
+      (cfg.rounds === UNLIMITED || state.round < cfg.rounds)) {
       state = {
         ...state,
         phase: "rest",

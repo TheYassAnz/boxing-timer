@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { parseConfig, PRESETS, sameConfig } from "./config";
+import { fmtClock, fromMinSec, parseConfig, presetIndex, PRESETS, roundLabel, stepDuration, stepRounds, UNLIMITED } from "./config";
 import { idle, pause, resume, secondsLeft, start, tick } from "./machine";
 
 const cfg = { rounds: 2, roundDuration: 3, restDuration: 2 };
@@ -68,10 +68,59 @@ test("parseConfig borne et ignore les valeurs invalides", () => {
   );
 });
 
-test("les préréglages respectent les bornes et se reconnaissent", () => {
-  for (const p of PRESETS) {
-    assert.deepEqual(parseConfig(JSON.stringify(p.config)), p.config);
-    assert.ok(sameConfig(p.config, { ...p.config }));
-  }
-  assert.ok(!sameConfig(PRESETS[0].config, PRESETS[1].config));
+test("préréglages exacts", () => {
+  assert.deepEqual(PRESETS.map((p) => [p.label, p.config]), [
+    ["Échauffement", { rounds: UNLIMITED, roundDuration: 30, restDuration: 30 }],
+    ["Assauts", { rounds: UNLIMITED, roundDuration: 90, restDuration: 35 }],
+    ["Sparring", { rounds: 12, roundDuration: 180, restDuration: 60 }],
+  ]);
+  for (const p of PRESETS) assert.deepEqual(parseConfig(JSON.stringify(p.config)), p.config);
+});
+
+test("presetIndex reconnaît ou renvoie -1", () => {
+  assert.equal(presetIndex(PRESETS[2].config), 2);
+  assert.equal(presetIndex({ ...PRESETS[2].config, rounds: 6 }), -1);
+});
+
+test("config de l'ancienne version rechargée", () => {
+  assert.deepEqual(parseConfig('{"rounds":3,"roundDuration":180,"restDuration":60}'), { rounds: 3, roundDuration: 180, restDuration: 60 });
+  assert.equal(parseConfig('{"rounds":-4}').rounds, 0);
+  assert.equal(parseConfig('{"rounds":500}').rounds, 100);
+});
+
+test("stepRounds passe par illimité et borne", () => {
+  assert.equal(stepRounds(1, -1), 0);
+  assert.equal(stepRounds(0, -1), 0);
+  assert.equal(stepRounds(0, 1), 1);
+  assert.equal(stepRounds(100, 1), 100);
+});
+
+test("stepDuration aligne sur 5 s et borne 1–300", () => {
+  assert.equal(stepDuration(1, 1), 5);
+  assert.equal(stepDuration(33, 1), 35);
+  assert.equal(stepDuration(33, -1), 30);
+  assert.equal(stepDuration(5, -1), 1);
+  assert.equal(stepDuration(1, -1), 1);
+  assert.equal(stepDuration(300, 1), 300);
+});
+
+test("fromMinSec borne 1–300", () => {
+  assert.equal(fromMinSec(0, 0), 1);
+  assert.equal(fromMinSec(1, 30), 90);
+  assert.equal(fromMinSec(5, 59), 300);
+});
+
+test("libellés", () => {
+  assert.equal(fmtClock(35), "0:35");
+  assert.equal(fmtClock(180), "3:00");
+  assert.equal(roundLabel(2, 12), "Round 2 / 12");
+  assert.equal(roundLabel(7, UNLIMITED), "Round 7");
+});
+
+test("illimité : ne termine jamais et rattrape l'arrière-plan", () => {
+  const u = { rounds: UNLIMITED, roundDuration: 3, restDuration: 2 };
+  const r = tick(start(u, 0), u, (5 * 50 + 1) * 1000);
+  assert.notEqual(r.state.phase, "done");
+  assert.equal(r.state.round, 51);
+  assert.equal(r.transitions, 100);
 });
