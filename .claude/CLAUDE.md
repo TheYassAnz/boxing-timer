@@ -13,6 +13,7 @@
 - **Haptiques** : expo-haptics (utilisé — alerte 10s + fin de phase)
 - **Audio** : expo-audio via `useSound` — cloche `assets/sounds/boxing_bell.wav`, claquoir `assets/sounds/clapper.wav` (claves CC0, voir `assets/sounds/CREDITS.md`). Mode audio `playsInSilentMode` réglé dans `app/_layout.tsx`
 - **Keep-awake** : expo-keep-awake (utilisé — actif sur l'écran Timer)
+- **Écran verrouillé** : iOS = Live Activity via `expo-live-activity` (`hooks/useLockScreen.ts`) ; Android = notification de premier plan `mediaPlayback` avec compte à rebours natif, module Expo local `modules/session-notification` (`hooks/useLockScreen.android.ts`). Contenu commun : `components/timer/lockScreen.ts`. `hooks/useBackgroundKeepAlive.ts` garde le minuteur actif écran verrouillé (boucle audio silencieuse)
 - **Timer** : machine à états pure basée sur des timestamps (`components/timer/machine.ts`), testée avec `npm test` (node:test via tsx)
 - **Persistance** : @react-native-async-storage/async-storage (clé `boxing-timer-config`)
 
@@ -33,10 +34,15 @@ components/
     index.tsx          # Écran Timer
     config.ts          # Config, DEFAULTS, LIMITS, PRESETS, UNLIMITED, parseConfig, formatage
     machine.ts         # Machine à états pure (start/pause/resume/tick) + machine.test.ts
+    lockScreen.ts      # lockScreenContent(state, cfg) : contenu Live Activity / notification
     theme.ts           # Palette système (usePalette(phase)), rouge d'accent, vert au repos
     ProgressRing.tsx   # Anneau de progression SVG
+modules/
+  session-notification/  # Module Expo local Android : Service de premier plan + notification (show/hide)
 hooks/
   useBoxingTimer.ts    # Machine sur React (tick 250 ms, cloche, claquoir, haptiques) : useBoxingTimer(config, { bell, clap })
+  useLockScreen.ts     # Live Activity iOS ; useLockScreen.android.ts : notification Android
+  useBackgroundKeepAlive.ts  # Boucle silencieuse pour rester actif écran verrouillé
   useSound.ts          # Lecture d'un son (expo-audio)
   useStoredConfig.ts   # Config persistée (AsyncStorage)
 ```
