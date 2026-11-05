@@ -1,18 +1,12 @@
-import {
-  startActivity,
-  stopActivity,
-  updateActivity,
-  type LiveActivityState,
-} from "expo-live-activity";
 import { useEffect, useRef } from "react";
+import { end, start, update } from "@/modules/live-activity";
 import { fmtClock, type Config } from "@/components/timer/config";
 import { lockScreenContent } from "@/components/timer/lockScreen";
 import type { TimerState } from "@/components/timer/machine";
 
-const COLORS = { red: "#FF3B30", green: "#34C759" };
-
 export function useLockScreen(state: TimerState, config: Config) {
-  const idRef = useRef<string | null>(null);
+  const activeRef = useRef(false);
+  const queueRef = useRef<Promise<void>>(Promise.resolve());
   const content = lockScreenContent(state, config);
   const remaining = content?.remaining ?? 0;
   const title = content?.title;
@@ -20,35 +14,31 @@ export function useLockScreen(state: TimerState, config: Config) {
   const tint = content?.tint;
   const endsAt = content?.endsAt;
 
+  // Native calls are async: chain them so a slow start never lands after a later update or end.
+  const run = (op: () => Promise<void>) => {
+    queueRef.current = queueRef.current.then(op).catch(() => {});
+  };
+
   // `remaining` is deliberately omitted: it changes every tick, and only matters when endsAt is null (pause).
   useEffect(() => {
     try {
       if (title === undefined || phaseLabel === undefined || tint === undefined) {
-        if (idRef.current) {
-          stopActivity(idRef.current, { title: "" });
-          idRef.current = null;
+        if (activeRef.current) {
+          activeRef.current = false;
+          run(end);
         }
         return;
       }
-      const next: LiveActivityState = endsAt
-        ? { title, subtitle: phaseLabel, progressBar: { date: endsAt } }
-        : {
-            title,
-            subtitle: `${phaseLabel} · En pause ${fmtClock(Math.ceil(remaining / 1000))}`,
-          };
-      if (idRef.current) {
-        updateActivity(idRef.current, next);
-      } else {
-        // Colors are start-only in the library: a start in Repos stays green, a start in Round red.
-        idRef.current =
-          startActivity(next, {
-            backgroundColor: "#000000",
-            titleColor: "#FFFFFF",
-            subtitleColor: COLORS[tint],
-            progressViewTint: COLORS[tint],
-            progressViewLabelColor: "#FFFFFF",
-          }) ?? null;
-      }
+      const next = {
+        title,
+        phaseLabel,
+        isRest: tint === "green",
+        endsAt: endsAt ?? null,
+        pausedText: endsAt ? null : fmtClock(Math.ceil(remaining / 1000)),
+      };
+      const op = activeRef.current ? update : start;
+      activeRef.current = true;
+      run(() => op(next));
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title, phaseLabel, tint, endsAt]);
@@ -56,9 +46,9 @@ export function useLockScreen(state: TimerState, config: Config) {
   useEffect(
     () => () => {
       try {
-        if (idRef.current) stopActivity(idRef.current, { title: "" });
+        if (activeRef.current) run(end);
       } catch {}
-      idRef.current = null;
+      activeRef.current = false;
     },
     [],
   );

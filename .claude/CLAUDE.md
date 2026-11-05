@@ -13,7 +13,7 @@
 - **Haptiques** : expo-haptics (utilisé — alerte 10s + fin de phase)
 - **Audio** : expo-audio via `useSound` — cloche `assets/sounds/boxing_bell.wav`, claquoir `assets/sounds/clapper.wav` (claves CC0, voir `assets/sounds/CREDITS.md`). Mode audio `playsInSilentMode` réglé dans `app/_layout.tsx`
 - **Keep-awake** : expo-keep-awake (utilisé — actif sur l'écran Timer)
-- **Écran verrouillé** : iOS = Live Activity via `expo-live-activity` (`hooks/useLockScreen.ts`) ; Android = notification de premier plan `mediaPlayback` avec compte à rebours natif, module Expo local `modules/session-notification` (`hooks/useLockScreen.android.ts`). Contenu commun : `components/timer/lockScreen.ts`. `hooks/useBackgroundKeepAlive.ts` garde le minuteur actif écran verrouillé (boucle audio silencieuse)
+- **Écran verrouillé** : iOS = Live Activity maison : widget SwiftUI `targets/live-activity` (via `@bacons/apple-targets`) + module Expo local `modules/live-activity` (`hooks/useLockScreen.ts`) ; Android = notification de premier plan `mediaPlayback` avec compte à rebours natif, module Expo local `modules/session-notification` (`hooks/useLockScreen.android.ts`). Contenu commun : `components/timer/lockScreen.ts`. `hooks/useBackgroundKeepAlive.ts` garde le minuteur actif écran verrouillé (boucle audio silencieuse)
 - **Timer** : machine à états pure basée sur des timestamps (`components/timer/machine.ts`), testée avec `npm test` (node:test via tsx)
 - **Persistance** : @react-native-async-storage/async-storage (clé `boxing-timer-config`)
 
