@@ -35,13 +35,7 @@ Seul composant métier. Contient :
 - `EditModal` — modal centré (fade), un champ `TextInput` numérique par valeur, `autoFocus`, validation des bornes à la fermeture
 - `ConfigRow` — ligne avec label, valeur formatée et bouton crayon `pencil-outline`
 
-**Refs pour closures stables dans `onExpire`** :
-```
-phaseRef, roundRef, configRef, bellRef
-```
-Le hook `useTimer` capture `onExpire` à l'initialisation — sans les refs, phase/config seraient stale.
-
-**Workaround react-timer-hook** : `restart()` appelé dans `onExpire` est écrasé par le `isRunning = false` interne du hook. Fix : `setTimeout(() => restart(...), 0)` pour différer après le cycle courant.
+**Moteur de temps** (`components/timer/machine.ts`, pur et testé) : chaque phase a une deadline `endsAt` (timestamp ms). `tick(state, config, now)` enchaîne les phases depuis la deadline précédente et renvoie le nombre de transitions, ce qui rattrape exactement le temps passé en arrière-plan. `useBoxingTimer` appelle `tick(Date.now())` toutes les 250 ms tant que le timer tourne, joue la cloche à chaque transition et déclenche l'haptique en passant sous 10 s.
 
 **Son** : `expo-audio` (`useAudioPlayer`) charge `assets/sounds/boxing_bell.wav`. `playBell()` fait `seekTo(0)` puis `play()` avec fallback silencieux. Joué au démarrage et à chaque changement de phase.
 
@@ -59,7 +53,7 @@ Le hook `useTimer` capture `onExpire` à l'initialisation — sans les refs, pha
 
 | Package | Utilisé | Notes |
 |---|---|---|
-| `react-timer-hook` | ✅ | Timer principal |
+| `tsx` (dev) | ✅ | Lance `npm test` (node:test) |
 | `expo-haptics` | ✅ | Alerte 10s + fin de phase |
 | `expo-audio` | ✅ | Son de cloche (remplace expo-av, retiré en SDK 55) |
 | `expo-keep-awake` | ✅ | Anti-veille |
@@ -78,8 +72,7 @@ Le hook `useTimer` capture `onExpire` à l'initialisation — sans les refs, pha
 
 | Risque | Sévérité | Note |
 |---|---|---|
-| `NativeTabs` est `unstable` | Moyen | API peut changer entre versions Expo |
-| `onExpire` stale closure | Résolu | Via refs + setTimeout workaround documenté |
+| Timer en arrière-plan | Résolu | Rattrapage par timestamps (la cloche sonne au retour, pas pendant) |
 | React Compiler (experimental) | Faible | Surveiller les regressions sur les hooks |
 | Gluestack UI v3 + NativeWind v4 | Faible | Stack récente, interactions parfois surprenantes |
 

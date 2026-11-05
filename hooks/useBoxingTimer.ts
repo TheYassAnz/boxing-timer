@@ -1,97 +1,58 @@
 import * as Haptics from "expo-haptics";
-import { useEffect, useRef, useState } from "react";
-import { useTimer } from "react-timer-hook";
-import { type Config, DEFAULTS } from "@/components/timer/config";
+import { useEffect, useState } from "react";
+import type { Config } from "@/components/timer/config";
+import {
+  idle,
+  pause,
+  resume,
+  secondsLeft,
+  start,
+  tick,
+} from "@/components/timer/machine";
 
-export type Phase = "idle" | "round" | "rest" | "done";
-
-function makeExpiry(seconds: number): Date {
-  const t = new Date();
-  t.setSeconds(t.getSeconds() + seconds);
-  return t;
-}
+export type { Phase } from "@/components/timer/machine";
 
 export function useBoxingTimer(config: Config, onBell: () => void) {
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [currentRound, setCurrentRound] = useState(1);
+  const [state, setState] = useState(() => idle(config));
+  const isRunning = state.endsAt !== null;
 
-  // useTimer captures onExpire once, so it reads current values through refs
-  const phaseRef = useRef<Phase>("idle");
-  const roundRef = useRef(1);
-  const configRef = useRef<Config>(DEFAULTS);
-  const bellRef = useRef(onBell);
   useEffect(() => {
-    phaseRef.current = phase;
-    roundRef.current = currentRound;
-    configRef.current = config;
-    bellRef.current = onBell;
-  });
-
-  const { seconds, minutes, isRunning, pause, resume, restart } = useTimer({
-    expiryTimestamp: makeExpiry(DEFAULTS.roundDuration),
-    autoStart: false,
-    interval: 1000,
-    onExpire: () => {
-      const p = phaseRef.current;
-      const round = roundRef.current;
-      const cfg = configRef.current;
-
-      bellRef.current();
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-      // restart() inside onExpire is overwritten by the hook's own isRunning=false
-      if (p === "round") {
-        if (round < cfg.rounds) {
-          setPhase("rest");
-          setTimeout(() => restart(makeExpiry(cfg.restDuration), true), 0);
-        } else {
-          setPhase("done");
-        }
-      } else if (p === "rest") {
-        setCurrentRound((r) => r + 1);
-        setPhase("round");
-        setTimeout(() => restart(makeExpiry(cfg.roundDuration), true), 0);
+    if (!isRunning) return;
+    const id = setTimeout(() => {
+      const next = tick(state, config, Date.now());
+      if (next.transitions > 0) {
+        onBell();
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else if (secondsLeft(state) > 10 && secondsLeft(next.state) <= 10) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       }
-    },
-  });
-
-  useEffect(() => {
-    if (isRunning && minutes === 0 && seconds === 10) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seconds]);
+      setState(next.state);
+    }, 250);
+    return () => clearTimeout(id);
+  }, [state, config, onBell, isRunning]);
 
   const toggle = () => {
+    const now = Date.now();
     if (isRunning) {
-      pause();
-    } else if (phase === "idle") {
+      setState(pause(state, now));
+    } else if (state.phase === "idle") {
       onBell();
-      setPhase("round");
-      restart(makeExpiry(config.roundDuration), true);
+      setState(start(config, now));
     } else {
-      resume();
+      setState(resume(state, now));
     }
   };
 
-  const reset = () => {
-    setPhase("idle");
-    setCurrentRound(1);
-    restart(makeExpiry(config.roundDuration), false);
-  };
+  const reset = () => setState(idle(config));
 
-  const setIdleDuration = (roundDuration: number) => {
-    if (phase === "idle") restart(makeExpiry(roundDuration), false);
-  };
-
+  const secs = secondsLeft(state);
   return {
-    phase,
-    currentRound,
-    minutes,
-    seconds,
+    phase: state.phase,
+    currentRound: state.round,
+    minutes: Math.floor(secs / 60),
+    seconds: secs % 60,
     isRunning,
     toggle,
     reset,
-    setIdleDuration,
   };
 }

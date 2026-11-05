@@ -12,7 +12,7 @@
 - **Haptiques** : expo-haptics (utilisé — alerte 10s + fin de phase)
 - **Audio** : expo-audio (`useAudioPlayer` — `assets/sounds/boxing_bell.wav`)
 - **Keep-awake** : expo-keep-awake (utilisé — actif sur l'écran Timer)
-- **Timer** : react-timer-hook
+- **Timer** : machine à états pure basée sur des timestamps (`components/timer/machine.ts`), testée avec `npm test` (node:test via tsx)
 - **Persistance** : @react-native-async-storage/async-storage (clé `boxing-timer-config`)
 
 ## Structure du projet
@@ -31,13 +31,14 @@ components/
   timer/
     index.tsx          # Écran Timer (affichage uniquement)
     config.ts          # Type Config, DEFAULTS, LIMITS, parseConfig, formatage
+    machine.ts         # Machine à états pure (start/pause/resume/tick) + machine.test.ts
     EditModal.tsx      # Modal d'édition d'une valeur
     ConfigRow.tsx      # Ligne de réglage avec bouton crayon
   ui/
     button/            # Button Gluestack (ne pas modifier)
     gluestack-ui-provider/
 hooks/
-  useBoxingTimer.ts    # Machine à états idle/round/rest/done + haptiques
+  useBoxingTimer.ts    # Branche la machine sur React (tick 250 ms, cloche, haptiques)
   useBell.ts           # Cloche (expo-audio)
   useStoredConfig.ts   # Config persistée (AsyncStorage)
 ```
@@ -62,15 +63,13 @@ hooks/
 
 ## Quirks connus
 
-- **react-timer-hook** : appeler `restart()` directement dans `onExpire` est écrasé par le `isRunning = false` interne. Toujours différer avec `setTimeout(() => restart(...), 0)`.
-- **onExpire stale closure** : `useTimer` capture `onExpire` à l'initialisation. Utiliser des refs (`phaseRef`, `roundRef`, `configRef`, `bellRef` dans `hooks/useBoxingTimer.ts`) pour accéder aux valeurs courantes.
+- **Temps** : la fin de chaque phase est un timestamp (`endsAt`). `tick()` enchaîne les phases à partir de la deadline précédente, pas de `Date.now()`, pour rattraper exactement le temps passé en arrière-plan. Ne pas décrémenter un compteur à chaque tick.
 
 ## Ce qu'il NE faut PAS faire
 
 - La tab Community est en cours de développement (voir PROGRESS.md).
 - Ne pas utiliser `alert()` — feedbacks visuels/haptiques uniquement.
 - Ne pas ajouter de gestion d'état globale (Redux, Zustand) — `useState` suffit.
-- Ne pas appeler `restart()` directement dans `onExpire` sans `setTimeout`.
 - Ne pas publier sur l'App Store — usage personnel uniquement.
 
 ## Commandes utiles
@@ -80,6 +79,7 @@ npm start          # Démarre Expo (scan QR code)
 npm run ios        # Simulateur iOS
 npm run android    # Émulateur Android
 npm run lint       # ESLint
+npm test           # Tests de la machine à états (node:test)
 ```
 
 ## Plateforme cible

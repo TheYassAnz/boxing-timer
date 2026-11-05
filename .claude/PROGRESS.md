@@ -40,7 +40,7 @@ _Dernière mise à jour : 2026-05-14_
 | ------------------------------------------- | ---------- | -------------------------------------------------------------------------- |
 | Configuration via modal par valeur          | ✅ Fait    | Bouton ✎ par ligne, modal centré, clavier numérique, autoFocus             |
 | Persistance de la configuration             | ✅ Fait    | AsyncStorage (clé `boxing-timer-config`)                                   |
-| Correction pause au changement de phase     | ✅ Fait    | `setTimeout(() => restart(...), 0)` — workaround react-timer-hook          |
+| Correction pause au changement de phase     | ✅ Fait    | Remplacé par la machine à timestamps (phase 3)          |
 | Empêcher la mise en veille                  | ✅ Fait    | `useKeepAwake()` actif dès que l'écran Timer est monté                     |
 | Son de cloche                               | ✅ Fait    | expo-audio · `boxing_bell.wav` · démarrage + chaque changement de phase      |
 | Animations de transition de phase           | ❌ À faire | @legendapp/motion disponible                                               |

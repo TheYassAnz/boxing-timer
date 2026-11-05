@@ -25,14 +25,10 @@ export default function Timer() {
     isRunning,
     toggle: handleToggle,
     reset: handleReset,
-    setIdleDuration,
   } = useBoxingTimer(config, playBell);
 
-  const handleSave = (key: keyof Config, value: number) => {
-    const next = { ...config, [key]: value };
-    setConfig(next);
-    setIdleDuration(next.roundDuration);
-  };
+  const handleSave = (key: keyof Config, value: number) =>
+    setConfig({ ...config, [key]: value });
 
   const isRest = phase === "rest";
   const isDone = phase === "done";
