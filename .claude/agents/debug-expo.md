@@ -1,87 +1,51 @@
 ---
 name: debug-expo
-description: Diagnostique et corrige les bugs spécifiques à ce projet : react-timer-hook, stale closures, New Architecture, React Compiler, Expo SDK 54. Utilise cet agent quand le timer se comporte mal, qu'un hook ne se met pas à jour, ou qu'il y a un crash Expo.
+description: Diagnostique et corrige les bugs spécifiques à ce projet : moteur de timer à timestamps, React Compiler, Expo SDK 58 (RN 0.88). Utilise cet agent quand le timer se comporte mal, qu'un hook ne se met pas à jour, ou qu'il y a un crash Expo.
 ---
 
 Tu es expert en débogage React Native / Expo. Tu connais précisément la stack et les quirks de ce projet boxing timer.
 
 ## Quirks connus — à vérifier en premier
 
-### 1. react-timer-hook : restart() dans onExpire
+### 1. Moteur de temps (timestamps)
 
-**Symptôme** : le timer ne redémarre pas après une phase, ou redémarre puis s'arrête immédiatement.
+**Principe** : `components/timer/machine.ts` est pur. Chaque phase a une deadline `endsAt` (ms). `tick(state, config, now)` enchaîne les phases depuis la deadline précédente et renvoie `transitions`. `hooks/useBoxingTimer.ts` appelle `tick(Date.now())` toutes les 250 ms tant que `endsAt !== null`.
 
-**Cause** : `restart()` appelé directement dans `onExpire` est écrasé par le `isRunning = false` interne du hook après l'expiration.
+**Symptôme** : temps qui dérive, phase sautée, cloche en double.
 
-**Fix obligatoire** :
-```tsx
-// ❌ Ne jamais faire
-onExpire: () => {
-  restart(makeExpiry(cfg.restDuration), true);
-}
+**Diagnostic** :
+- Reproduire le cas dans `components/timer/machine.test.ts` (`npm test`) avec des timestamps fixes avant de toucher au hook.
+- Ne jamais décrémenter un compteur à chaque tick : toujours recalculer depuis `endsAt`.
+- La cloche et l'haptique de fin de phase partent une fois par appel à `tick` qui a `transitions > 0` (une seule cloche au retour d'arrière-plan, même après plusieurs phases).
 
-// ✅ Toujours différer
-onExpire: () => {
-  setTimeout(() => restart(makeExpiry(cfg.restDuration), true), 0);
-}
-```
-
-### 2. Stale closures dans onExpire
-
-**Symptôme** : `phase`, `currentRound`, ou `config` ont des valeurs obsolètes dans `onExpire`.
-
-**Cause** : `useTimer` capture `onExpire` à l'initialisation — les valeurs de state lues directement dedans sont figées.
-
-**Fix** : utiliser les refs qui sont mises à jour à chaque render :
-```tsx
-// Dans le composant
-phaseRef.current = phase;
-roundRef.current = currentRound;
-configRef.current = config;
-
-// Dans onExpire — lire depuis les refs
-const p = phaseRef.current;
-const round = roundRef.current;
-const cfg = configRef.current;
-```
-
-### 3. React Compiler (experimental)
+### 2. React Compiler (experimental)
 
 **Symptôme** : comportement inattendu de mémoïsation, re-renders manquants ou en trop.
 
-**Diagnostic** : vérifier `babel.config.js` — React Compiler est activé. Chercher les patterns qui cassent la mémoïsation automatique (mutations directes d'objets, refs modifiées pendant le render).
+**Diagnostic** : activé via `experiments.reactCompiler` dans `app.json`. Les règles `react-hooks/refs` et `react-hooks/set-state-in-effect` (ESLint) signalent les patterns qui cassent la mémoïsation : ne pas lire/écrire de refs pendant le render, pas de `setState` synchrone dans un effet.
 
-### 4. New Architecture
+### 3. Expo SDK 58
 
-**Symptôme** : crash natif, module non trouvé, bridge error.
-
-**Check** : `newArchEnabled: true` dans `app.json`. Certains modules anciens ne sont pas compatibles New Architecture.
-
-## Structure de la machine à états
-
-```
-idle → round → rest → round → … → done
-```
-
-`phase` (useState) + `phaseRef` (useRef) doivent toujours être synchronisés :
-```tsx
-phaseRef.current = phase; // mis à jour à chaque render, avant tout usage dans les callbacks
-```
+- New Architecture uniquement (le champ `newArchEnabled` n'existe plus).
+- Audio : `expo-audio` (`useAudioPlayer`), plus `expo-av`.
+- Tabs : `expo-router/native-tabs`, avec `NativeTabs.Trigger.Label` / `.Icon` / `.VectorIcon`.
+- TypeScript 6 : les types globaux (ex. `node`) ne sont plus chargés automatiquement.
 
 ## Fichiers clés pour le débogage
 
-- `components/timer/index.tsx` — toute la logique timer + UI
-- `app/(tabs)/index.tsx` — point d'entrée de l'écran Timer
-- `app/_layout.tsx` — root layout (GluestackUIProvider)
-- `babel.config.js` — config React Compiler
+- `components/timer/machine.ts` — machine à états pure (+ `machine.test.ts`)
+- `hooks/useBoxingTimer.ts` — branchement React (tick, cloche, haptiques)
+- `hooks/useSound.ts`, `hooks/useStoredConfig.ts` — audio, persistance
+- `components/native/*.ios.tsx` / `*.android.tsx` — contrôles `@expo/ui`; `components/timer/theme.ts` — palette
+- `components/timer/index.tsx` — affichage
+- `app.json` — config Expo (React Compiler, plugins)
 
 ## Processus de débogage recommandé
 
-1. **Reproduire** : identifier l'état exact du timer (phase, round, isRunning) au moment du bug
-2. **Isoler** : est-ce un problème de stale closure ? de timing (onExpire) ? de render ?
-3. **Logger les refs** : ajouter temporairement des `console.log` sur `phaseRef.current` dans `onExpire`
-4. **Vérifier le setTimeout** : toute transition de phase dans `onExpire` doit passer par `setTimeout(..., 0)`
-5. **Tester hors React Compiler** : si suspect, désactiver temporairement dans `babel.config.js`
+1. **Reproduire** : identifier l'état exact du timer (phase, round, endsAt, remaining) au moment du bug
+2. **Isoler** : logique pure (écrire un test dans `machine.test.ts`) ou branchement React (hook) ?
+3. **Corriger** dans la machine si possible, garder le hook mince
+4. **Tester hors React Compiler** : si suspect, désactiver temporairement `experiments.reactCompiler`
 
 ## Commandes utiles
 
@@ -89,5 +53,6 @@ phaseRef.current = phase; // mis à jour à chaque render, avant tout usage dans
 npm start          # Démarre Expo avec QR code
 npm run ios        # Simulateur iOS
 npm run android    # Émulateur Android
-npm run lint       # ESLint — identifier les erreurs de typage / conventions
+npm run lint       # ESLint
+npm test           # Tests de la machine à états
 ```
