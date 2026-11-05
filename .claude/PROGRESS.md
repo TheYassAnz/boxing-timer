@@ -42,7 +42,7 @@ _Dernière mise à jour : 2026-05-14_
 | Persistance de la configuration             | ✅ Fait    | AsyncStorage (clé `boxing-timer-config`)                                   |
 | Correction pause au changement de phase     | ✅ Fait    | `setTimeout(() => restart(...), 0)` — workaround react-timer-hook          |
 | Empêcher la mise en veille                  | ✅ Fait    | `useKeepAwake()` actif dès que l'écran Timer est monté                     |
-| Son de cloche                               | ✅ Fait    | expo-av · `boxing_bell.wav` · démarrage + chaque changement de phase      |
+| Son de cloche                               | ✅ Fait    | expo-audio · `boxing_bell.wav` · démarrage + chaque changement de phase      |
 | Animations de transition de phase           | ❌ À faire | @legendapp/motion disponible                                               |
 
 ---

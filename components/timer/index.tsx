@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Audio } from "expo-av";
+import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
 import { useKeepAwake } from "expo-keep-awake";
 import { useEffect, useRef, useState } from "react";
@@ -18,6 +18,7 @@ interface Config {
 
 const DEFAULTS: Config = { rounds: 3, roundDuration: 180, restDuration: 60 };
 const STORAGE_KEY = "boxing-timer-config";
+const BELL = require("../../assets/sounds/boxing_bell.wav");
 
 const LIMITS: Record<keyof Config, [number, number]> = {
   rounds: [1, 100],
@@ -79,10 +80,12 @@ function EditModal({
   onClose,
 }: EditModalProps) {
   const [text, setText] = useState(String(value));
+  const [wasVisible, setWasVisible] = useState(visible);
 
-  useEffect(() => {
+  if (visible !== wasVisible) {
+    setWasVisible(visible);
     if (visible) setText(String(value));
-  }, [visible, value]);
+  }
 
   const handleSave = () => {
     const n = parseInt(text, 10);
@@ -188,24 +191,16 @@ export default function Timer() {
   const phaseRef = useRef<Phase>("idle");
   const roundRef = useRef(1);
   const configRef = useRef<Config>(DEFAULTS);
-  const bellRef = useRef<Audio.Sound | null>(null);
-  phaseRef.current = phase;
-  roundRef.current = currentRound;
-  configRef.current = config;
-
+  const bell = useAudioPlayer(BELL);
   useEffect(() => {
-    Audio.Sound.createAsync(require("../../assets/sounds/boxing_bell.wav"))
-      .then(({ sound }) => {
-        bellRef.current = sound;
-      })
-      .catch(() => {});
-    return () => {
-      bellRef.current?.unloadAsync();
-    };
-  }, []);
+    phaseRef.current = phase;
+    roundRef.current = currentRound;
+    configRef.current = config;
+  });
 
   const playBell = () => {
-    bellRef.current?.replayAsync().catch(() => {});
+    bell.seekTo(0).catch(() => {});
+    bell.play();
   };
 
   const [loaded, setLoaded] = useState(false);

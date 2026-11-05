@@ -4,7 +4,7 @@ _Dernière mise à jour : 2026-05-14_
 
 ## Vue d'ensemble
 
-Application mobile de minuterie pour la boxe, construite avec Expo SDK 54 / React Native. Le cœur fonctionnel est terminé : le timer enchaîne les rounds et les repos, avec son, haptiques, configuration persistée et écran anti-veille.
+Application mobile de minuterie pour la boxe, construite avec Expo SDK 58 / React Native. Le cœur fonctionnel est terminé : le timer enchaîne les rounds et les repos, avec son, haptiques, configuration persistée et écran anti-veille.
 
 ---
 
@@ -12,7 +12,7 @@ Application mobile de minuterie pour la boxe, construite avec Expo SDK 54 / Reac
 
 ### Routing
 
-Expo Router v6 avec `NativeTabs` (`expo-router/unstable-native-tabs`). Deux onglets :
+Expo Router 58 avec `NativeTabs` (`expo-router/native-tabs`). Deux onglets :
 - **Timer** (`app/(tabs)/index.tsx`) — écran principal, renvoie `<Timer />`
 - **Community** (`app/(tabs)/community.tsx`) — stub vide, ne pas développer
 
@@ -43,7 +43,7 @@ Le hook `useTimer` capture `onExpire` à l'initialisation — sans les refs, pha
 
 **Workaround react-timer-hook** : `restart()` appelé dans `onExpire` est écrasé par le `isRunning = false` interne du hook. Fix : `setTimeout(() => restart(...), 0)` pour différer après le cycle courant.
 
-**Son** : `expo-av` charge `assets/sounds/boxing_bell.wav` au mount. `playBell()` déclenche `replayAsync()` avec fallback silencieux. Joué au démarrage et à chaque changement de phase.
+**Son** : `expo-audio` (`useAudioPlayer`) charge `assets/sounds/boxing_bell.wav`. `playBell()` fait `seekTo(0)` puis `play()` avec fallback silencieux. Joué au démarrage et à chaque changement de phase.
 
 **Haptiques** : `expo-haptics`
 - `ImpactFeedbackStyle.Heavy` à 10 secondes restantes
@@ -61,7 +61,7 @@ Le hook `useTimer` capture `onExpire` à l'initialisation — sans les refs, pha
 |---|---|---|
 | `react-timer-hook` | ✅ | Timer principal |
 | `expo-haptics` | ✅ | Alerte 10s + fin de phase |
-| `expo-av` | ✅ | Son de cloche |
+| `expo-audio` | ✅ | Son de cloche (remplace expo-av, retiré en SDK 55) |
 | `expo-keep-awake` | ✅ | Anti-veille |
 | `@react-native-async-storage/async-storage` | ✅ | Persistance config |
 | `@expo/vector-icons` | ✅ | Icônes (MaterialCommunityIcons) |
@@ -90,4 +90,4 @@ Le hook `useTimer` capture `onExpire` à l'initialisation — sans les refs, pha
 - Machine à états claire et robuste, sans état global
 - Refs bien utilisées pour éviter les stale closures dans les callbacks du hook timer
 - Fallbacks silencieux sur audio et storage (app fonctionnelle même si l'un d'eux échoue)
-- Stack moderne : New Architecture, React Compiler, Expo Router v6
+- Stack moderne : New Architecture, React Compiler, Expo SDK 58

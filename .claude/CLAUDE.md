@@ -2,14 +2,15 @@
 
 ## Stack
 
-- **Framework** : Expo SDK 54 + Expo Router v6 (file-based routing)
+- **Framework** : Expo SDK 58 (React Native 0.88) + Expo Router 58 (file-based routing)
 - **UI** : NativeWind v4 (Tailwind CSS) + Gluestack UI v3
 - **Langage** : TypeScript strict
-- **React** : 19.1.0 avec React Compiler activé (experimental)
-- **New Architecture** activée (`newArchEnabled: true`)
+- **React** : 19.3 avec React Compiler activé (experimental)
+- **New Architecture** seule architecture (le champ `newArchEnabled` n'existe plus)
+- **Tabs** : `NativeTabs` depuis `expo-router/native-tabs` (Label/Icon/VectorIcon en sous-composants de `Trigger`)
 - **Animations** : @legendapp/motion + react-native-reanimated (installés, pas encore utilisés)
 - **Haptiques** : expo-haptics (utilisé — alerte 10s + fin de phase)
-- **Audio** : expo-av (utilisé — `assets/sounds/boxing_bell.wav`)
+- **Audio** : expo-audio (`useAudioPlayer` — `assets/sounds/boxing_bell.wav`)
 - **Keep-awake** : expo-keep-awake (utilisé — actif sur l'écran Timer)
 - **Timer** : react-timer-hook
 - **Persistance** : @react-native-async-storage/async-storage (clé `boxing-timer-config`)
