@@ -11,7 +11,7 @@
 - **Animations** : @legendapp/motion (utilisé — transitions de phase, pulsation 10s). `Motion.View` sans `className` : mettre les styles sur un `View` enfant
 - **Anneau** : react-native-svg (`components/timer/ProgressRing.tsx`)
 - **Haptiques** : expo-haptics (utilisé — alerte 10s + fin de phase)
-- **Audio** : expo-audio via `useSound` — cloche `assets/sounds/boxing_bell.wav`, claquoir `assets/sounds/clapper.wav` (synthétisé, voir `assets/sounds/CREDITS.md`)
+- **Audio** : expo-audio via `useSound` — cloche `assets/sounds/boxing_bell.wav`, claquoir `assets/sounds/clapper.wav` (claves CC0, voir `assets/sounds/CREDITS.md`). Mode audio `playsInSilentMode` réglé dans `app/_layout.tsx`
 - **Keep-awake** : expo-keep-awake (utilisé — actif sur l'écran Timer)
 - **Timer** : machine à états pure basée sur des timestamps (`components/timer/machine.ts`), testée avec `npm test` (node:test via tsx)
 - **Persistance** : @react-native-async-storage/async-storage (clé `boxing-timer-config`)

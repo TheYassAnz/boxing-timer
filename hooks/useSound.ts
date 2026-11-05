@@ -3,7 +3,10 @@ import { useAudioPlayer } from "expo-audio";
 export function useSound(source: number) {
   const player = useAudioPlayer(source);
   return () => {
-    player.seekTo(0).catch(() => {});
-    player.play();
+    // Play only once rewound: a player left at the end of the clip stays silent.
+    player
+      .seekTo(0)
+      .catch(() => {})
+      .then(() => player.play());
   };
 }
