@@ -1,4 +1,4 @@
-import { requireNativeModule } from "expo";
+import { requireOptionalNativeModule } from "expo";
 
 export type LiveActivityState = {
   title: string;
@@ -8,10 +8,18 @@ export type LiveActivityState = {
   pausedText: string | null;
 };
 
-const native = requireNativeModule("LiveActivity");
+type LiveActivityModule = {
+  start(state: LiveActivityState): Promise<void>;
+  update(state: LiveActivityState): Promise<void>;
+  end(): Promise<void>;
+};
 
-export const start = (state: LiveActivityState): Promise<void> => native.start(state);
+const native = requireOptionalNativeModule<LiveActivityModule>("LiveActivity");
 
-export const update = (state: LiveActivityState): Promise<void> => native.update(state);
+export const start = (state: LiveActivityState): Promise<void> =>
+  native ? native.start(state) : Promise.resolve();
 
-export const end = (): Promise<void> => native.end();
+export const update = (state: LiveActivityState): Promise<void> =>
+  native ? native.update(state) : Promise.resolve();
+
+export const end = (): Promise<void> => (native ? native.end() : Promise.resolve());
