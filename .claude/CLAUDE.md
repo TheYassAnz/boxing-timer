@@ -29,10 +29,17 @@ assets/
     boxing_bell.wav    # Son de cloche fourni par l'utilisateur
 components/
   timer/
-    index.tsx          # Composant Timer principal (machine à états + UI complète)
+    index.tsx          # Écran Timer (affichage uniquement)
+    config.ts          # Type Config, DEFAULTS, LIMITS, parseConfig, formatage
+    EditModal.tsx      # Modal d'édition d'une valeur
+    ConfigRow.tsx      # Ligne de réglage avec bouton crayon
   ui/
     button/            # Button Gluestack (ne pas modifier)
     gluestack-ui-provider/
+hooks/
+  useBoxingTimer.ts    # Machine à états idle/round/rest/done + haptiques
+  useBell.ts           # Cloche (expo-audio)
+  useStoredConfig.ts   # Config persistée (AsyncStorage)
 ```
 
 ## Conventions de code
@@ -56,7 +63,7 @@ components/
 ## Quirks connus
 
 - **react-timer-hook** : appeler `restart()` directement dans `onExpire` est écrasé par le `isRunning = false` interne. Toujours différer avec `setTimeout(() => restart(...), 0)`.
-- **onExpire stale closure** : `useTimer` capture `onExpire` à l'initialisation. Utiliser des refs (`phaseRef`, `roundRef`, `configRef`) pour accéder aux valeurs courantes.
+- **onExpire stale closure** : `useTimer` capture `onExpire` à l'initialisation. Utiliser des refs (`phaseRef`, `roundRef`, `configRef`, `bellRef` dans `hooks/useBoxingTimer.ts`) pour accéder aux valeurs courantes.
 
 ## Ce qu'il NE faut PAS faire
 

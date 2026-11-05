@@ -18,7 +18,7 @@ Expo Router 58 avec `NativeTabs` (`expo-router/native-tabs`). Deux onglets :
 
 Le root layout (`app/_layout.tsx`) enveloppe tout dans `GluestackUIProvider mode="system"` (dark/light selon le système) et importe `global.css` pour NativeWind.
 
-### Composant Timer (`components/timer/index.tsx`)
+### Composant Timer (`components/timer/index.tsx` + `hooks/`)
 
 Seul composant métier. Contient :
 

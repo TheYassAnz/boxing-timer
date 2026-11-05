@@ -1,279 +1,37 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAudioPlayer } from "expo-audio";
-import * as Haptics from "expo-haptics";
 import { useKeepAwake } from "expo-keep-awake";
-import { useEffect, useRef, useState } from "react";
-import { Modal, Pressable, Text, TextInput, View } from "react-native";
-import { useTimer } from "react-timer-hook";
-import { Button, ButtonText } from "../ui/button";
+import { useState } from "react";
+import { Text, View } from "react-native";
+import { Button, ButtonText } from "@/components/ui/button";
+import { useBell } from "@/hooks/useBell";
+import { useBoxingTimer } from "@/hooks/useBoxingTimer";
+import { useStoredConfig } from "@/hooks/useStoredConfig";
+import ConfigRow from "./ConfigRow";
+import EditModal from "./EditModal";
+import { type Config, fmtDuration, pad } from "./config";
 
-type Phase = "idle" | "round" | "rest" | "done";
-
-interface Config {
-  rounds: number;
-  roundDuration: number;
-  restDuration: number;
-}
-
-const DEFAULTS: Config = { rounds: 3, roundDuration: 180, restDuration: 60 };
-const STORAGE_KEY = "boxing-timer-config";
-const BELL = require("../../assets/sounds/boxing_bell.wav");
-
-const LIMITS: Record<keyof Config, [number, number]> = {
-  rounds: [1, 100],
-  roundDuration: [1, 300],
-  restDuration: [1, 300],
-};
-
-function parseConfig(raw: string): Config {
-  let data: Partial<Record<keyof Config, unknown>> = {};
-  try {
-    data = JSON.parse(raw) ?? {};
-  } catch {}
-  const out = { ...DEFAULTS };
-  for (const key of Object.keys(LIMITS) as (keyof Config)[]) {
-    const v = data[key];
-    if (typeof v === "number" && Number.isFinite(v)) {
-      const [min, max] = LIMITS[key];
-      out[key] = Math.min(max, Math.max(min, Math.round(v)));
-    }
-  }
-  return out;
-}
-
-function makeExpiry(seconds: number): Date {
-  const t = new Date();
-  t.setSeconds(t.getSeconds() + seconds);
-  return t;
-}
-
-function pad(n: number) {
-  return String(n).padStart(2, "0");
-}
-
-function fmtDuration(s: number): string {
-  const m = Math.floor(s / 60);
-  const rem = s % 60;
-  return rem === 0 ? `${m} min` : `${m}:${pad(rem)}`;
-}
-
-interface EditModalProps {
-  visible: boolean;
-  label: string;
-  value: number;
-  hint: string;
-  min: number;
-  max: number;
-  onSave: (v: number) => void;
-  onClose: () => void;
-}
-
-function EditModal({
-  visible,
-  label,
-  value,
-  hint,
-  min,
-  max,
-  onSave,
-  onClose,
-}: EditModalProps) {
-  const [text, setText] = useState(String(value));
-  const [wasVisible, setWasVisible] = useState(visible);
-
-  if (visible !== wasVisible) {
-    setWasVisible(visible);
-    if (visible) setText(String(value));
-  }
-
-  const handleSave = () => {
-    const n = parseInt(text, 10);
-    if (!isNaN(n)) onSave(Math.min(max, Math.max(min, n)));
-    onClose();
-  };
-
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <Pressable
-        className="flex-1 items-center justify-center bg-black/60"
-        onPress={onClose}
-      >
-        <Pressable onPress={() => {}}>
-          <View className="bg-boxing-white dark:bg-boxing-dark rounded-2xl px-6 py-6 w-72">
-            <Text className="text-boxing-navy dark:text-boxing-white text-xs font-semibold uppercase tracking-widest mb-4">
-              {label}
-            </Text>
-            <TextInput
-              className="bg-boxing-navy/10 dark:bg-boxing-white/10 text-boxing-navy dark:text-boxing-white font-bold text-3xl rounded-xl px-4 py-3 text-center"
-              value={text}
-              onChangeText={setText}
-              keyboardType="number-pad"
-              returnKeyType="done"
-              onSubmitEditing={handleSave}
-              maxLength={4}
-              selectTextOnFocus
-              autoFocus
-            />
-            <Text className="text-boxing-navy/40 dark:text-boxing-white/40 text-xs mt-2 text-center">
-              {hint}
-            </Text>
-            <View className="flex-row gap-3 mt-5">
-              <Button
-                size="md"
-                action="secondary"
-                className="flex-1 rounded-xl !bg-boxing-navy/10 dark:!bg-boxing-white/10"
-                onPress={onClose}
-              >
-                <ButtonText className="!text-boxing-navy dark:!text-boxing-white">
-                  Annuler
-                </ButtonText>
-              </Button>
-              <Button
-                size="md"
-                action="primary"
-                className="flex-1 rounded-xl !bg-boxing-navy dark:!bg-boxing-blue"
-                onPress={handleSave}
-              >
-                <ButtonText className="font-bold">OK</ButtonText>
-              </Button>
-            </View>
-          </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
-  );
-}
-
-interface ConfigRowProps {
-  label: string;
-  display: string;
-  onEdit: () => void;
-}
-
-function ConfigRow({ label, display, onEdit }: ConfigRowProps) {
-  return (
-    <View className="flex-row items-center justify-between w-full px-8 py-3">
-      <Text className="text-boxing-navy dark:text-boxing-sky text-xs font-semibold uppercase tracking-widest">
-        {label}
-      </Text>
-      <View className="flex-row items-center gap-3">
-        <Text className="text-boxing-navy dark:text-boxing-white font-bold text-sm">
-          {display}
-        </Text>
-        <Pressable onPress={onEdit} className="p-1" hitSlop={8}>
-          <MaterialCommunityIcons
-            name="pencil-outline"
-            size={18}
-            color="#64b5f6"
-          />
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
-type EditTarget = "rounds" | "roundDuration" | "restDuration" | null;
+type EditTarget = keyof Config | null;
 
 export default function Timer() {
   useKeepAwake();
 
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [currentRound, setCurrentRound] = useState(1);
-  const [config, setConfig] = useState<Config>(DEFAULTS);
+  const [config, setConfig] = useStoredConfig();
   const [editing, setEditing] = useState<EditTarget>(null);
-
-  const phaseRef = useRef<Phase>("idle");
-  const roundRef = useRef(1);
-  const configRef = useRef<Config>(DEFAULTS);
-  const bell = useAudioPlayer(BELL);
-  useEffect(() => {
-    phaseRef.current = phase;
-    roundRef.current = currentRound;
-    configRef.current = config;
-  });
-
-  const playBell = () => {
-    bell.seekTo(0).catch(() => {});
-    bell.play();
-  };
-
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((val) => {
-        if (val) setConfig(parseConfig(val));
-      })
-      .catch(() => {})
-      .finally(() => setLoaded(true));
-  }, []);
-
-  useEffect(() => {
-    if (loaded) AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(config)).catch(() => {});
-  }, [config, loaded]);
-
-  const { seconds, minutes, isRunning, pause, resume, restart } = useTimer({
-    expiryTimestamp: makeExpiry(DEFAULTS.roundDuration),
-    autoStart: false,
-    interval: 1000,
-    onExpire: () => {
-      const p = phaseRef.current;
-      const round = roundRef.current;
-      const cfg = configRef.current;
-
-      playBell();
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-      if (p === "round") {
-        if (round < cfg.rounds) {
-          setPhase("rest");
-          setTimeout(() => restart(makeExpiry(cfg.restDuration), true), 0);
-        } else {
-          setPhase("done");
-        }
-      } else if (p === "rest") {
-        setCurrentRound((r) => r + 1);
-        setPhase("round");
-        setTimeout(() => restart(makeExpiry(cfg.roundDuration), true), 0);
-      }
-    },
-  });
-
-  useEffect(() => {
-    if (isRunning && minutes === 0 && seconds === 10) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seconds]);
-
-  const handleToggle = () => {
-    if (isRunning) {
-      pause();
-    } else if (phase === "idle") {
-      playBell();
-      setPhase("round");
-      restart(makeExpiry(config.roundDuration), true);
-    } else {
-      resume();
-    }
-  };
-
-  const handleReset = () => {
-    setPhase("idle");
-    setCurrentRound(1);
-    restart(makeExpiry(config.roundDuration), false);
-  };
+  const playBell = useBell();
+  const {
+    phase,
+    currentRound,
+    minutes,
+    seconds,
+    isRunning,
+    toggle: handleToggle,
+    reset: handleReset,
+    setIdleDuration,
+  } = useBoxingTimer(config, playBell);
 
   const handleSave = (key: keyof Config, value: number) => {
     const next = { ...config, [key]: value };
     setConfig(next);
-    if (phase === "idle") restart(makeExpiry(next.roundDuration), false);
+    setIdleDuration(next.roundDuration);
   };
 
   const isRest = phase === "rest";
