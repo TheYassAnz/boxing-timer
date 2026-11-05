@@ -21,7 +21,7 @@
 
 ```
 app/
-  _layout.tsx          # Root layout — Stack + global.css
+  _layout.tsx          # Root layout — Stack + global.css, mode audio, tâche headless Android
   (tabs)/
     _layout.tsx        # NativeTabs, teinte d'accent = rouge de la palette
     index.tsx          # Écran Timer (tab principale)
@@ -38,7 +38,10 @@ components/
     theme.ts           # Palette système (usePalette(phase)), rouge d'accent, vert au repos
     ProgressRing.tsx   # Anneau de progression SVG
 modules/
-  session-notification/  # Module Expo local Android : Service de premier plan + notification (show/hide)
+  live-activity/         # Module Expo local iOS : Live Activity ActivityKit (start/update/end)
+  session-notification/  # Module Expo local Android : Service de premier plan + notification (show/hide) + tâche headless TimerKeepAlive
+targets/
+  live-activity/         # Widget SwiftUI de la Live Activity (@bacons/apple-targets)
 hooks/
   useBoxingTimer.ts    # Machine sur React (tick 250 ms, cloche, claquoir, haptiques) : useBoxingTimer(config, { bell, clap })
   useLockScreen.ts     # Live Activity iOS ; useLockScreen.android.ts : notification Android
@@ -83,11 +86,11 @@ hooks/
 ## Commandes utiles
 
 ```bash
-npm start          # Démarre Expo (scan QR code)
+npm start          # Démarre Metro pour le dev build déjà installé (pas d'Expo Go)
 npm run ios        # Build et lance le dev build iOS
 npm run android    # Build et lance le dev build Android
 npm run lint       # ESLint
-npm test           # Tests de la machine à états (node:test)
+npm test           # Tests de la machine à états et de lockScreen (node:test)
 ```
 
 ## Plateforme cible
