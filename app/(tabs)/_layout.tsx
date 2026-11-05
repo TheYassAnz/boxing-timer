@@ -1,9 +1,12 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { NativeTabs } from "expo-router/native-tabs";
 
+import { usePalette } from "@/components/timer/theme";
+
 export default function TabLayout() {
+  const { accent } = usePalette("round");
   return (
-    <NativeTabs>
+    <NativeTabs tintColor={accent}>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Timer</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
