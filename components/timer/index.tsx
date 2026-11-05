@@ -19,6 +19,28 @@ interface Config {
 const DEFAULTS: Config = { rounds: 3, roundDuration: 180, restDuration: 60 };
 const STORAGE_KEY = "boxing-timer-config";
 
+const LIMITS: Record<keyof Config, [number, number]> = {
+  rounds: [1, 100],
+  roundDuration: [1, 300],
+  restDuration: [1, 300],
+};
+
+function parseConfig(raw: string): Config {
+  let data: Partial<Record<keyof Config, unknown>> = {};
+  try {
+    data = JSON.parse(raw) ?? {};
+  } catch {}
+  const out = { ...DEFAULTS };
+  for (const key of Object.keys(LIMITS) as (keyof Config)[]) {
+    const v = data[key];
+    if (typeof v === "number" && Number.isFinite(v)) {
+      const [min, max] = LIMITS[key];
+      out[key] = Math.min(max, Math.max(min, Math.round(v)));
+    }
+  }
+  return out;
+}
+
 function makeExpiry(seconds: number): Date {
   const t = new Date();
   t.setSeconds(t.getSeconds() + seconds);
@@ -186,15 +208,20 @@ export default function Timer() {
     bellRef.current?.replayAsync().catch(() => {});
   };
 
+  const [loaded, setLoaded] = useState(false);
+
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((val) => {
-      if (val) setConfig(JSON.parse(val));
-    });
+    AsyncStorage.getItem(STORAGE_KEY)
+      .then((val) => {
+        if (val) setConfig(parseConfig(val));
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
   }, []);
 
   useEffect(() => {
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-  }, [config]);
+    if (loaded) AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(config)).catch(() => {});
+  }, [config, loaded]);
 
   const { seconds, minutes, isRunning, pause, resume, restart } = useTimer({
     expiryTimestamp: makeExpiry(DEFAULTS.roundDuration),
@@ -218,7 +245,6 @@ export default function Timer() {
       } else if (p === "rest") {
         setCurrentRound((r) => r + 1);
         setPhase("round");
-        playBell();
         setTimeout(() => restart(makeExpiry(cfg.roundDuration), true), 0);
       }
     },
@@ -250,11 +276,9 @@ export default function Timer() {
   };
 
   const handleSave = (key: keyof Config, value: number) => {
-    setConfig((prev) => {
-      const next = { ...prev, [key]: value };
-      if (phase === "idle") restart(makeExpiry(next.roundDuration), false);
-      return next;
-    });
+    const next = { ...config, [key]: value };
+    setConfig(next);
+    if (phase === "idle") restart(makeExpiry(next.roundDuration), false);
   };
 
   const isRest = phase === "rest";

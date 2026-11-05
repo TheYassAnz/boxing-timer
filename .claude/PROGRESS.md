@@ -42,7 +42,7 @@ _Dernière mise à jour : 2026-05-14_
 | Persistance de la configuration             | ✅ Fait    | AsyncStorage (clé `boxing-timer-config`)                                   |
 | Correction pause au changement de phase     | ✅ Fait    | `setTimeout(() => restart(...), 0)` — workaround react-timer-hook          |
 | Empêcher la mise en veille                  | ✅ Fait    | `useKeepAwake()` actif dès que l'écran Timer est monté                     |
-| Son de cloche                               | ✅ Fait    | expo-av · `boxing_bell.mp3` · démarrage + chaque changement de phase      |
+| Son de cloche                               | ✅ Fait    | expo-av · `boxing_bell.wav` · démarrage + chaque changement de phase      |
 | Animations de transition de phase           | ❌ À faire | @legendapp/motion disponible                                               |
 
 ---
@@ -50,12 +50,10 @@ _Dernière mise à jour : 2026-05-14_
 ## Backlog / Idées futures
 
 - [ ] Tab Community : partage de workouts (non prioritaire)
-- [ ] Tab About : crédits, lien GitHub
 - [ ] Préréglages (ex: 3×3 amateur, 3×5 pro, Sparring)
 - [ ] Warmup / Cooldown optionnels
 - [ ] Timer circulaire (progress ring) — react-native-svg disponible
 - [ ] Widget iOS (si Expo le supporte)
-- [ ] Supprimer `ConfigSheet.tsx` (dead code)
 
 ---
 

@@ -12,10 +12,9 @@ Application mobile de minuterie pour la boxe, construite avec Expo SDK 54 / Reac
 
 ### Routing
 
-Expo Router v6 avec `NativeTabs` (`expo-router/unstable-native-tabs`). Trois onglets :
+Expo Router v6 avec `NativeTabs` (`expo-router/unstable-native-tabs`). Deux onglets :
 - **Timer** (`app/(tabs)/index.tsx`) — écran principal, renvoie `<Timer />`
 - **Community** (`app/(tabs)/community.tsx`) — stub vide, ne pas développer
-- **About** (`app/(tabs)/about.tsx`) — stub vide
 
 Le root layout (`app/_layout.tsx`) enveloppe tout dans `GluestackUIProvider mode="system"` (dark/light selon le système) et importe `global.css` pour NativeWind.
 
@@ -44,7 +43,7 @@ Le hook `useTimer` capture `onExpire` à l'initialisation — sans les refs, pha
 
 **Workaround react-timer-hook** : `restart()` appelé dans `onExpire` est écrasé par le `isRunning = false` interne du hook. Fix : `setTimeout(() => restart(...), 0)` pour différer après le cycle courant.
 
-**Son** : `expo-av` charge `assets/sounds/boxing_bell.mp3` au mount. `playBell()` déclenche `replayAsync()` avec fallback silencieux. Joué au démarrage et à chaque changement de phase.
+**Son** : `expo-av` charge `assets/sounds/boxing_bell.wav` au mount. `playBell()` déclenche `replayAsync()` avec fallback silencieux. Joué au démarrage et à chaque changement de phase.
 
 **Haptiques** : `expo-haptics`
 - `ImpactFeedbackStyle.Heavy` à 10 secondes restantes
@@ -53,10 +52,6 @@ Le hook `useTimer` capture `onExpire` à l'initialisation — sans les refs, pha
 **Persistance** : `AsyncStorage` (clé `boxing-timer-config`), lecture au mount, écriture à chaque changement de `config`.
 
 **Keep-awake** : `useKeepAwake()` actif en permanence sur cet écran.
-
-### Fichier mort
-
-`components/timer/ConfigSheet.tsx` — bottom sheet avec 3 champs, plus utilisé. À supprimer.
 
 ---
 
@@ -75,10 +70,7 @@ Le hook `useTimer` capture `onExpire` à l'initialisation — sans les refs, pha
 | `@legendapp/motion` | ❌ | Animations — pas encore utilisé |
 | `react-native-svg` | ❌ | Timer circulaire — pas encore utilisé |
 | `react-native-reanimated` | ❌ | Animations avancées — pas encore utilisé |
-| `react-aria` / `react-stately` | ❌ | Accessibilité — non utilisé |
-| `@expo/html-elements` | ❌ | Vestige du template, probablement inutile |
-| `expo-image` | ❌ | Non utilisé |
-| `tailwind-variants` | ❌ | Non utilisé |
+| `react-aria` / `react-stately` / `tailwind-variants` | ⚙️ | Peer deps de @gluestack-ui/utils — ne pas supprimer |
 
 ---
 
@@ -90,7 +82,6 @@ Le hook `useTimer` capture `onExpire` à l'initialisation — sans les refs, pha
 | `onExpire` stale closure | Résolu | Via refs + setTimeout workaround documenté |
 | React Compiler (experimental) | Faible | Surveiller les regressions sur les hooks |
 | Gluestack UI v3 + NativeWind v4 | Faible | Stack récente, interactions parfois surprenantes |
-| `ConfigSheet.tsx` dead code | Faible | À supprimer pour éviter la confusion |
 
 ---
 
