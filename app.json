@@ -38,8 +38,14 @@
       "expo-font",
       "expo-status-bar",
       "expo-web-browser",
-      ["expo-audio", { "enableBackgroundPlayback": true }],
-      "expo-asset"
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": true
+        }
+      ],
+      "expo-asset",
+      "expo-live-activity"
     ],
     "experiments": {
       "typedRoutes": true,
